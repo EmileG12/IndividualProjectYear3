@@ -30,4 +30,12 @@ def create_app():
     from .main import main as main_blueprint
     app.register_blueprint(main_blueprint)
 
+    #blueprint for the campaign manager parts of the app
+    from .campaignmanager import campaignmanager as campaignmanager_blueprint
+    app.register_blueprint(campaignmanager_blueprint)
+
+    #blueprint for email manager parts of the app
+    from .emailmanager import emailmanager as emailmanager_blueprint
+    app.register_blueprint(emailmanager_blueprint)
+
     return app
