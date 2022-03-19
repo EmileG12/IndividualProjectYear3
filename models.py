@@ -6,3 +6,8 @@ class User(UserMixin,db.Model):
     email = db.Column(db.String(100), unique=True)
     password = db.Column(db.String(100))
     name = db.Column(db.String(1000))
+
+class EmailResponse(db.Model):
+    id = db.Column(db.String(100))
+    timedate = db.Column(db.Date())
+    response = db.Column(db.Boolean())

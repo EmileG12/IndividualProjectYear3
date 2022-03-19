@@ -12,15 +12,30 @@
             </div>
         {% endif %}
         {% endwith %}
-        <form method="POST" action="/sendemail">
+        <form method="POST" action="/sendemail" enctype="multipart/form-data">
             <div class="field">
                 <div class="control">
-                    <input class="input is-large" type="email" name="campaignname" placeholder="Sender Address" autofocus="">
+                    <input class="input is-large" type="text" name="sendaddr" placeholder="Sender Address" autofocus="">
+                </div>
+            </div>
+             <div class="field">
+                <div class="control">
+                    <input class="input is-large" type="password" name="password" placeholder="Password of sender address" autofocus="">
                 </div>
             </div>
             <div class="field">
                 <div class="control">
-                    <input class="input is-large" type="email" name="campaignname" placeholder="Receiving Address" autofocus="">
+                    <input class="input is-large" type="text" name="toaddr" placeholder="Receiving Address" autofocus="">
+                </div>
+            </div>
+            <div class="field">
+                <div class="control">
+                    <input class="input is-large" type="text" name="subject" placeholder="Subject" autofocus="">
+                </div>
+            </div>
+            <div class="field">
+                <div class="control">
+                    <input class="input is-large" type="text" name="fakename" placeholder="Fake name for phishing use" autofocus="">
                 </div>
             </div>
             <div class="field">
@@ -28,6 +43,7 @@
                     <input class="input is-large" type="file" name="contentfile" placeholder="Email content (html file)">
                 </div>
             </div>
+            <button class="button is-block is-info is-large is-fullwidth">Yeet</button>
         </form>
     </div>
 </div>

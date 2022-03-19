@@ -9,7 +9,7 @@ def create_app():
 
     app.config['SECRET_KEY'] = 'secret-key-goes-here'
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///db.sqlite'
-
+    app.config['UPLOAD_FOLDER'] = ''
     db.init_app(app)
     login_manager = LoginManager()
     login_manager.login_view = 'auth.login'
