@@ -1,6 +1,11 @@
-from flask import Flask
+import os
+
+import bcrypt
+from flask import Flask,current_app
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
+
+
 # init SQLAlchemy so we can use it later in our models
 db = SQLAlchemy()
 
@@ -9,7 +14,9 @@ def create_app():
 
     app.config['SECRET_KEY'] = 'secret-key-goes-here'
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///db.sqlite'
-    app.config['UPLOAD_FOLDER'] = ''
+    if not os.path.isdir(os.path.join(app.instance_path, "Campaigns")):
+        os.makedirs(os.path.join(app.instance_path, "Campaigns"), exists_ok=True)
+    app.config['UPLOAD_FOLDER'] = app.instance_path + '/Campaigns'
     db.init_app(app)
     login_manager = LoginManager()
     login_manager.login_view = 'auth.login'
@@ -39,3 +46,7 @@ def create_app():
     app.register_blueprint(emailmanager_blueprint)
 
     return app
+
+
+
+db.create_all(app=create_app())

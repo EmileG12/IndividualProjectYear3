@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="column is-4 is-offset-4">
+<div class="column is-4 is-offset-4" >
     <h3 class="title">Add Campaign</h3>
 
     <div class="box">
@@ -12,7 +12,7 @@
             </div>
         {% endif %}
         {% endwith %}
-        <form method="POST" action="/addcampaign">
+        <form method="POST" action="/addcampaign" enctype="multipart/form-data">
             <div class="field">
                 <div class="control">
                     <input class="input is-large" type="text" name="campaignname" placeholder="Campaign Name" autofocus="">
@@ -21,8 +21,10 @@
             <div class="field">
                 <div class="control">
                     <input class="input is-large" type="file" name="campaignfile" placeholder="Campaign data file">
+
                 </div>
             </div>
+            <button class="button is-block is-info is-large is-fullwidth">Send</button>
         </form>
     </div>
 </div>

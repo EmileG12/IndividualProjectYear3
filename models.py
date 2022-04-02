@@ -8,6 +8,12 @@ class User(UserMixin,db.Model):
     name = db.Column(db.String(1000))
 
 class EmailResponse(db.Model):
-    id = db.Column(db.String(100))
+    id = db.Column(db.String(100), primary_key=True)
     timedate = db.Column(db.Date())
     response = db.Column(db.Boolean())
+
+class Campaign(db.Model):
+    id = db.Column (db.String(100), primary_key=True)
+    campaignName = db.Column(db.String(100))
+    campaignPath = db.Column(db.String(100))
+
