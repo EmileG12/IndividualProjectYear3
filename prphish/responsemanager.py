@@ -2,7 +2,7 @@ import datetime
 import smtplib
 from flask import Blueprint, render_template, redirect, url_for, request, flash, send_file
 
-from project.models import EmailResponse
+from .models import EmailResponse
 from . import db
 
 

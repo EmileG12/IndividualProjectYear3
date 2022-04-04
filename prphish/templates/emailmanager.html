@@ -1,0 +1,8 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="column is-4 is-offset-4">
+    <h3 class="title">Email Manager</h3>
+    <a class="button is-block is-info is-large is-fullwidth" href="{{url_for('emailmanager.sendemail')}}">Send Email</a>
+</div>
+{% endblock %}

@@ -3,14 +3,15 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from .models import User
 from . import db
 from flask import Blueprint, render_template, redirect, url_for
-...
-from flask_login import login_user
 
+from flask_login import login_user, login_required, logout_user
 auth = Blueprint('auth', __name__)
+
 
 @auth.route('/login')
 def login():
     return render_template('login.html')
+
 
 @auth.route('/login', methods=['POST'])
 def login_post():
@@ -25,17 +26,22 @@ def login_post():
     # take the user-supplied password, hash it, and compare it to the hashed password in the database
     if not user or not check_password_hash(user.password, password):
         flash('Please check your login details and try again.')
-        return redirect(url_for('auth.login'))  # if the user doesn't exist or password is wrong, reload the page
+        # if the user doesn't exist or password is wrong, reload the page
+        return redirect(url_for('auth.login'))
 
     login_user(user, remember=remember)
-    return redirect(url_for('main.profile'))
+    return redirect(url_for('main.user'))
 
-@auth.route('/addprofile')
-def addprofile():
-    return render_template('addprofile.html')
 
-@auth.route('/addprofile',methods=['POST'])
-def addprofile_post():
+@auth.route('/adduser')
+@login_required
+def adduser():
+    return render_template('adduser.html')
+
+
+@auth.route('/adduser', methods=['POST'])
+@login_required
+def adduser_post():
     email = request.form.get('email')
     name = request.form.get('name')
     password = request.form.get('password')
@@ -45,10 +51,11 @@ def addprofile_post():
 
     if user:  # if a user is found, we want to redirect back to signup page so user can try again
         flash('Email address already exists')
-        return redirect(url_for('auth.addprofile'))
+        return redirect(url_for('auth.adduser'))
 
     # create a new user with the form data. Hash the password so the plaintext version isn't saved.
-    new_user = User(email=email, name=name, password=generate_password_hash(password, method='sha256'))
+    new_user = User(email=email, name=name,
+                    password=generate_password_hash(password, method='sha256'))
 
     # add the new user to the database
     db.session.add(new_user)
@@ -56,6 +63,9 @@ def addprofile_post():
 
     return redirect(url_for('main.index'))
 
+
 @auth.route('/logout')
+@login_required
 def logout():
-    return 'Logout'
+    logout_user()
+    return redirect(url_for('main.index'))

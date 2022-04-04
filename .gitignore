@@ -1,6 +1,8 @@
 auth
 __pycache__
 .idea/
+instance
 phishMarket.py
 templates/blank.html
 db.sqlite-journal
+venv

@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h3 class="title">Campaign Manager</h3>
+<div class="column is-4 is-offset-4">
+
+    <a class="button is-block is-info is-large is-fullwidth" href="{{url_for('campaignmanager.addcampaign')}}">Add
+        Campaign</a>
+    <br>
+    <a class="button is-block is-info is-large is-fullwidth"
+        href="{{url_for('campaignmanager.retrievecampaign')}}">Retrieve Campaign</a>
+</div>
+{% endblock %}
