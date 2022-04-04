@@ -41,12 +41,14 @@ def create_app():
     from .campaignmanager import campaignmanager as campaignmanager_blueprint
     app.register_blueprint(campaignmanager_blueprint)
 
+    from .responsemanager import responsemanager as responsemanager_blueprint
+    app.register_blueprint(responsemanager_blueprint)
+
     #blueprint for email manager parts of the app
     from .emailmanager import emailmanager as emailmanager_blueprint
     app.register_blueprint(emailmanager_blueprint)
 
     return app
-
 
 
 db.create_all(app=create_app())
