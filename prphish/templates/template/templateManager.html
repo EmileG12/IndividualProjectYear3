@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h3 class="title">Template Manager</h3>
+<div class="column is-4 is-offset-4">
+
+    <a class="button is-block is-info is-large is-fullwidth" href="{{url_for('templatemanager.addtemplate')}}">Add
+        Template</a>
+    <hr>
+    <form method="GET" action="/templatget">
+        <div class="select  is-fullwidth  is-block  is-large">
+            <select name="id">
+                {% for template in templates -%}
+                <option value="{{template.id}}"> {{template.name}} </option>
+                {% endfor %}
+            </select>
+        </div>
+        <br>
+        <input class="button  is-block is-info is-large is-fullwidth" type="submit" value="Retrieve Template">
+    </form>
+</div>
+{% endblock %}

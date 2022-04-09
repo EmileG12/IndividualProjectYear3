@@ -1,26 +1,27 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="column is-4 is-offset-4" >
-    <h3 class="title">Add Campaign</h3>
+<div class="column is-4 is-offset-4">
+    <h3 class="title">Add Template</h3>
 
     <div class="box">
         {% with messages = get_flashed_messages() %}
         {% if messages %}
-            <div class="notification is-danger">
-                {{ messages[0] }}
-            </div>
+        <div class="notification is-danger">
+            {{ messages[0] }}
+        </div>
         {% endif %}
         {% endwith %}
-        <form method="POST" action="/addcampaign" enctype="multipart/form-data">
+        <form method="POST" action="/addtemplate" enctype="multipart/form-data">
             <div class="field">
                 <div class="control">
-                    <input class="input is-large" type="text" name="campaignname" placeholder="Campaign Name" autofocus="">
+                    <input class="input is-large" type="text" name="templatename" placeholder="Template Name"
+                        autofocus="">
                 </div>
             </div>
             <div class="field">
                 <div class="control">
-                    <input class="input is-large" type="file" name="campaignfile" placeholder="Campaign data file">
+                    <input class="input is-large" type="file" name="templatefile" placeholder="Template data file">
 
                 </div>
             </div>

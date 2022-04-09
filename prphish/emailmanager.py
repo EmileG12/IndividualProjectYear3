@@ -1,16 +1,18 @@
+import datetime
 import smtplib
+import uuid
 from email.mime.text import MIMEText
 from flask import Blueprint, render_template, redirect, url_for, request, flash, send_file
 from flask_login import login_required, current_user
-
-from . import db
-
+from jinja2 import Template
+import hashlib
 # Bcrypt package install needed
 import bcrypt
 
 from flask import Blueprint, render_template, redirect, url_for
-import time
 import io
+
+from prphish.models import db, EmailTemplate, Campaign
 
 emailmanager = Blueprint('emailmanager', __name__)
 
@@ -24,20 +26,51 @@ def manageemails():
 @emailmanager.route('/sendemail')
 @login_required
 def sendemail():
-    return render_template('sendemail.html')
+    templates = EmailTemplate.query.order_by(EmailTemplate.id)
+    return render_template('sendemail.html',templates=templates)
 
 
-def sendmassmail(sendaddr, password, toaddrlist, msg, server):
+def linkmaker(emailID, campaignID):
+    phishlink = url_for('responsemanager.gotphish') + "?s=" + emailID + "&x=" + campaignID
+    return phishlink
+
+
+def sendmassmail(sendaddr, password, FakeName, subject, toaddrfile, templatehash, server):
     server.starttls()
     server.login(sendaddr, password)
-    text = msg.as_string()
+    hashlist = ""
+    # Unique ID for campaign is created
+    campaignId = str(uuid.uuid4())
+    campaignDatetime = datetime.datetime.utcnow()
+    # List of email addresses to send to is hashed without a salt
+    # So that we may recover the responses of a specific list of emails later
+    hasher = hashlib.sha256()
+    hasher.update(toaddrfile.read())
+    campaignlisthash = hasher.hexdigest()
+    campaign = Campaign(id=campaignId, datesent=campaignDatetime, templatehash=templatehash, emailhashlist=campaignlisthash)
+    db.session.add(campaign)
+    db.session.commit()
+    # Template hash is used to recover file from the database
+    templatefile = open(EmailTemplate.query.filter_by(hash=templatehash).first().path, "r")
+    msg = templatefile.read()
+    # Read file containing addresses to send to as a list
+    toaddrlist = toaddrfile.read().decode("utf-8").replace(" ", "").split(",")
     for toaddr in toaddrlist:
-        hashlist = hashlist + toaddr + " , " + bcrypt.hashpw(toaddr.encode('utf-8'),
-                                                             bcrypt.gensalt()).decode('utf-8') + " ; "
-        msg['To'] = toaddr
+        toaddrhash = bcrypt.hashpw(toaddr.encode('utf-8'),bcrypt.gensalt()).decode('utf-8') + " ; "
+        hashlist = hashlist + toaddr + " , " + toaddrhash
+        templatePrep = Template(msg)
+        message = templatePrep.render(link = linkmaker(toaddrhash, campaignId))
+        message = MIMEText(message, 'html')
+        message['From'] = FakeName
+        message['Subject'] = subject
+        message['To'] = toaddr
+        text = message.as_string()
         server.sendmail(sendaddr, toaddr, text)
-
     server.quit()
+    hashlistbytes = io.BytesIO(bytes(hashlist, "utf-8"))
+    return send_file(hashlistbytes)
+
+
 
 
 @emailmanager.route('/sendemail', methods=['POST'])
@@ -48,51 +81,19 @@ def sendemail_post():
     FakeName = request.form.get('fakename')
     subject = request.form.get('subject')
     # File containing the content of the email
-    contentfile = request.files.get('contentfile')
+    templatehash = request.form.get('templatepath')
     # File containing all the email addresses to send the mail to
     toaddrfile = request.files.get('toaddrfile')
 
-    # Toaddr file is read and split into a list containing all the email addresses
-    x = toaddrfile.read().decode("utf-8").replace(" ", "").split(",")
-
-    msg = MIMEText(contentfile.stream.read().decode('UTF8'), 'html')
-
-    msg['From'] = FakeName
-    msg['Subject'] = subject
-    hashlist = ""
-
     if "@gmail" in sendaddr:
-       # server = smtplib.SMTP('smtp.gmail.com', 587)
-        for toaddr in x:
-            # Each address is hashed and salted, and a list of all addresses and their hash is created
-            # Emails and hashes are separated by a comma, while pairs are separated by a semicolon
-            hashlist = hashlist + toaddr + " , " + bcrypt.hashpw(toaddr.encode('utf-8'),
-                                                                 bcrypt.gensalt()).decode('utf-8') + " ; "
-            flash(toaddr)
-        # hashlist is prepared for sending
-        hashlistbytes = io.BytesIO(bytes(hashlist, "utf-8"))
-        # List of emails and hashes is sent to the client
-
-        return send_file(hashlistbytes, "text/plain", True, "Hashlist.txt")
-
+       server = smtplib.SMTP('smtp.gmail.com', 587)
+       sendmassmail(sendaddr, password, FakeName, subject, toaddrfile, templatehash, server)
     elif "@hotmail" in sendaddr or "@outlook" in sendaddr or "@live" in sendaddr:
-        #server = smtplib.SMTP('smtp.live.com', 587)
-        for toaddr in x:
-            hashlist = hashlist + toaddr + " , " + bcrypt.hashpw(toaddr.encode('utf-8'),
-                                                                 bcrypt.gensalt()).decode('utf-8') + " ; "
-            flash(toaddr)
-        hashlistbytes = io.BytesIO(bytes(hashlist, "utf-8"))
-        return send_file(hashlistbytes, "text/plain", True, "Hashlist.txt")
+        server = smtplib.SMTP('smtp-mail.outlook.com', 587)
+        sendmassmail(sendaddr,password, FakeName, subject, toaddrfile, templatehash, server)
     elif "@yahoo" in sendaddr:
-        #server = smtplib.SMTP_SSL('smtp.mail.yahoo.com', 465)
-        for toaddr in x:
-            hashlist = hashlist + toaddr + " , " + bcrypt.hashpw(toaddr.encode('utf-8'),
-                                                                 bcrypt.gensalt()).decode('utf-8') + " ; "
-            flash(toaddr)
-        hashlistbytes = io.BytesIO(bytes(hashlist, "utf-8"))
-        #sendmassmail(sendaddr,password, x, msg, server)
-        return send_file(hashlistbytes, "text/plain", True, "Hashlist.txt")
-
+        server = smtplib.SMTP_SSL('smtp.mail.yahoo.com', 465)
+        sendmassmail(sendaddr,password, FakeName, subject, toaddrfile, templatehash, server)
     else:
         flash('Email provider not supported')
-    return render_template('sendemail.html')
+    return render_template('sendemail.html',)

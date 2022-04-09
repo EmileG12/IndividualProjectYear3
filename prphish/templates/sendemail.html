@@ -38,10 +38,12 @@
                     <input class="input is-large" type="text" name="fakename" placeholder="Fake name for phishing use" autofocus="">
                 </div>
             </div>
-            <div class="field">
-                <div class="control">
-                    <input class="input is-large" type="file"  name="contentfile" placeholder="Email content (html file)">
-                </div>
+            <div class="select  is-fullwidth  is-block  is-large">
+            <select name="templatepath">
+                {% for template in templates -%}
+                <option value="{{template.hash}}"> {{template.name}} </option>
+                {% endfor %}
+            </select>
             </div>
             <div class="field">
                 <div class="control">
