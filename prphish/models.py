@@ -24,10 +24,11 @@ class Campaign(db.Model):
 # Database containing all responses to all campaigns
 # response is currently a boolean indicating whether the link was clicked or not
 class EmailResponse(db.Model):
-    emailID = db.Column(db.String(70), primary_key=True)
-    campaignId = db.Column(db.String(100), primary_key=True)
+    id = db.Column(db.Integer, primary_key=True)
+    emailID = db.Column(db.String(70))
+    campaignId = db.Column(db.String())
     responseDate = db.Column(db.DateTime())
-    response = db.Column(db.Boolean())
+    response = db.Column(db.Integer())
 
 # Database containing email templates to be used
 # Contains a name for ease of use by users, a path to the email and a hash
@@ -37,3 +38,5 @@ class EmailTemplate(db.Model):
     hash = db.Column(db.String(100))
     name = db.Column(db.String())
     path = db.Column(db.String(100))
+    responsepagetemplatename = db.Column(db.String())
+    materialtemplatename = db.Column(db.String())

@@ -31,21 +31,22 @@ def sendemail():
 
 
 def linkmaker(emailID, campaignID):
-    phishlink = url_for('responsemanager.gotphish') + "?s=" + emailID + "&x=" + campaignID
+    #phishlink = url_for('responsemanager.gotphish') + "?s=" + emailID + "&x=" + campaignID
+    phishlink = "http://localhost:5000/" +"gotphish" + "?s=" + emailID + "&x=" + campaignID
     return phishlink
 
 
 def sendmassmail(sendaddr, password, FakeName, subject, toaddrfile, templatehash, server):
-    server.starttls()
-    server.login(sendaddr, password)
+    # server.starttls()
+    #server.login(sendaddr, password)
     hashlist = ""
     # Unique ID for campaign is created
     campaignId = str(uuid.uuid4())
     campaignDatetime = datetime.datetime.utcnow()
-    # List of email addresses to send to is hashed without a salt
-    # So that we may recover the responses of a specific list of emails later
+    # # List of email addresses to send to is hashed without a salt
+    # # So that we may recover the responses of a specific list of emails later
     hasher = hashlib.sha256()
-    hasher.update(toaddrfile.read())
+    hasher.update(toaddrfile)
     campaignlisthash = hasher.hexdigest()
     campaign = Campaign(id=campaignId, datesent=campaignDatetime, templatehash=templatehash, emailhashlist=campaignlisthash)
     db.session.add(campaign)
@@ -54,10 +55,11 @@ def sendmassmail(sendaddr, password, FakeName, subject, toaddrfile, templatehash
     templatefile = open(EmailTemplate.query.filter_by(hash=templatehash).first().path, "r")
     msg = templatefile.read()
     # Read file containing addresses to send to as a list
-    toaddrlist = toaddrfile.read().decode("utf-8").replace(" ", "").split(",")
+    toaddrteststring = ""
+    toaddrlist = toaddrfile.decode("utf-8").strip().replace(" ", "").split(",")
     for toaddr in toaddrlist:
-        toaddrhash = bcrypt.hashpw(toaddr.encode('utf-8'),bcrypt.gensalt()).decode('utf-8') + " ; "
-        hashlist = hashlist + toaddr + " , " + toaddrhash
+        toaddrhash = bcrypt.hashpw(toaddr.encode('utf-8'),bcrypt.gensalt()).decode('utf-8')
+        hashlist = hashlist + toaddr + " , " + toaddrhash + " ; "
         templatePrep = Template(msg)
         message = templatePrep.render(link = linkmaker(toaddrhash, campaignId))
         message = MIMEText(message, 'html')
@@ -65,10 +67,15 @@ def sendmassmail(sendaddr, password, FakeName, subject, toaddrfile, templatehash
         message['Subject'] = subject
         message['To'] = toaddr
         text = message.as_string()
-        server.sendmail(sendaddr, toaddr, text)
-    server.quit()
+        #server.sendmail(sendaddr, toaddr, text)
+    #server.quit()
+    #fuckingIO = io.StringIO()
+    #fuckingIO.write(hashlist)
+    print(hashlist)
     hashlistbytes = io.BytesIO(bytes(hashlist, "utf-8"))
-    return send_file(hashlistbytes)
+    #fuckingIO.seek(0)
+   # flash(hashlist)
+    return send_file(path_or_file=hashlistbytes, mimetype="text/plain", as_attachment=True, attachment_filename="hashlistatt.txt")
 
 
 
@@ -83,17 +90,19 @@ def sendemail_post():
     # File containing the content of the email
     templatehash = request.form.get('templatepath')
     # File containing all the email addresses to send the mail to
-    toaddrfile = request.files.get('toaddrfile')
-
-    if "@gmail" in sendaddr:
-       server = smtplib.SMTP('smtp.gmail.com', 587)
-       sendmassmail(sendaddr, password, FakeName, subject, toaddrfile, templatehash, server)
-    elif "@hotmail" in sendaddr or "@outlook" in sendaddr or "@live" in sendaddr:
-        server = smtplib.SMTP('smtp-mail.outlook.com', 587)
-        sendmassmail(sendaddr,password, FakeName, subject, toaddrfile, templatehash, server)
-    elif "@yahoo" in sendaddr:
-        server = smtplib.SMTP_SSL('smtp.mail.yahoo.com', 465)
-        sendmassmail(sendaddr,password, FakeName, subject, toaddrfile, templatehash, server)
-    else:
-        flash('Email provider not supported')
-    return render_template('sendemail.html',)
+    toaddrfile = request.files.get('toaddrfile').read()
+    server = smtplib.SMTP('smtp-mail.outlook.com', 587)
+    return sendmassmail(sendaddr, password, FakeName, subject, toaddrfile, templatehash, server)
+    # if "@gmail" in sendaddr:
+    #    server = smtplib.SMTP('smtp.gmail.com', 587)
+    #    sendmassmail(sendaddr, password, FakeName, subject, toaddrfile, templatehash, server)
+    # elif "@hotmail" in sendaddr or "@outlook" in sendaddr or "@live" in sendaddr:
+    #     server = smtplib.SMTP('smtp-mail.outlook.com', 587)
+    #     sendmassmail(sendaddr,password, FakeName, subject, toaddrfile, templatehash, server)
+    # elif "@yahoo" in sendaddr:
+    #     server = smtplib.SMTP_SSL('smtp.mail.yahoo.com', 465)
+    #     sendmassmail(sendaddr,password, FakeName, subject, toaddrfile, templatehash, server)
+    # else:
+    #     flash('Email provider not supported')
+    # templates = EmailTemplate.query.order_by(EmailTemplate.id)
+    # return render_template('sendemail.html', templates=templates)

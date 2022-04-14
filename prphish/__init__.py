@@ -15,7 +15,6 @@ def create_app():
         app.instance_path)
 
     app.config['UPLOAD_FOLDER'] = os.path.join(app.instance_path,  'Templates')
-
     from .models import db, User
 
     db.init_app(app)

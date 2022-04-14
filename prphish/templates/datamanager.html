@@ -1,0 +1,20 @@
+{extends "base.html"}
+{% block content %}
+<table style="width:100%", border="1">
+        <tr>
+            <td>Campaign Date</td>
+            <td>Template</td>
+            <td>Click responses</td>
+            <td>Post responses</td>
+            <td>Download responses</td>
+        </tr>
+        {% for row in responses %}
+        <tr>
+            <td> r</td>
+            <td>{{Location[item]}}</td>
+            <td>{{Status[item]}}</td>
+        </tr>
+        {% endfor %}
+</table>
+
+{% endblock %}

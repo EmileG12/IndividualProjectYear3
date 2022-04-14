@@ -42,13 +42,19 @@ def addtemplate_post():
     templateName = request.form.get('templatename')
     templateHash = bcrypt.hashpw(templateName.encode(
         'utf-8'), bcrypt.gensalt()).decode('utf-8')
-    if templateFile.filename == '':
-        flash('no file')
+    custompagechecks = request.form.getlist("custompageargs")
+    if "yespost" in custompagechecks:
+        postpagetemplate = request.files.get("customresponsepagefile")
+        responsepagepath = os.path.join(
+            current_app.config['UPLOAD_FOLDER'], postpagetemplate.filename)
+        postpagetemplate.save(responsepagepath)
+    else:
+        responsepagepath = None
     templatePath = os.path.join(
         current_app.config['UPLOAD_FOLDER'], templateFile.filename)
     templateFile.save(templatePath)
     newTemplate = EmailTemplate(
-        hash=templateHash, name=templateName, path=templatePath)
+        hash=templateHash, name=templateName, path=templatePath, reponsepagepath=responsepagepath)
     db.session.add(newTemplate)
     db.session.commit()
     return redirect(url_for('.template', id=newTemplate.id))
