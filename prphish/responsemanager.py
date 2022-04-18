@@ -1,10 +1,10 @@
 import smtplib
 import uuid
-
 from flask import Blueprint, render_template, redirect, url_for, request, flash, send_file, current_app
+import flask_sqlalchemy
 from datetime import datetime
 import jinja2
-from .models import db, EmailResponse, EmailTemplate, Campaign
+from .models import db, EmailResponse, EmailTemplate, Campaign, responseTypes
 
 responsemanager = Blueprint('responsemanager', __name__)
 
@@ -15,8 +15,8 @@ def gotphish():
     campaignId = request.args.get('x')
     amidownloading = request.args.get('p')
     templateId = Campaign.query.filter_by(id=campaignId).first().templatehash
-    responsetemplatename = EmailTemplate.query.filter_by(hash=templateId).first().responsepagepath
-    materialtemplatename = EmailTemplate.query.filter_by(hash=templateId).first().materialname
+    responsetemplatename = EmailTemplate.query.filter_by(hash=templateId).first().responsepagetemplatename
+    materialtemplatename = EmailTemplate.query.filter_by(hash=templateId).first().materialtemplatename
     if responsetemplatename is not None:
         record_response(emailId,campaignId,datetime.utcnow(),1)
         templateLoader = jinja2.FileSystemLoader(current_app.config['UPLOAD_FOLDER'])
@@ -30,7 +30,6 @@ def gotphish():
     return render_template('sendemail.html')
 
 
-
 @responsemanager.route('/gotphish', methods=['POST'])
 def gotphish_post():
     emailId = request.form.get("s")
@@ -38,13 +37,8 @@ def gotphish_post():
     record_response(emailId, campaignId, datetime.utcnow(), 2)
     return render_template("login.html")
 
-@responsemanager.route("/getresponses")
-def getresponses():
-    responses = EmailResponse.query()
-
-
 def record_response(emailId, campaignId, responseDate, responseCode):
-        responseRow = EmailResponse(emailId=emailId, campaignId=campaignId, responseDate=responseDate,
+        responseRow = EmailResponse(emailID=emailId, campaignId=campaignId, responseDate=responseDate,
                                     response=responseCode)
         db.session.add(responseRow)
         db.session.commit()

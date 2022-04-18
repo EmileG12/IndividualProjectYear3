@@ -1,0 +1,36 @@
+{%extends "base.html"%}
+{% block content %}
+<div class="box">
+        {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            <div class="notification is-danger">
+                {{ messages[0] }}
+            </div>
+        {% endif %}
+        {% endwith %}
+</div>
+<table style="width:100%", border="1" class="table is-hoverable" >
+        <thead>
+            <tr>
+                <td>Campaign Date</td>
+                <td>Template</td>
+                <td>Email address</td>
+                <td>Response Code</td>
+            </tr>
+        </thead>
+        <tfoot>
+            <tr>
+                <td>Campaign Date</td>
+                <td>Template</td>
+                <td>Email address</td>
+                <td>Response Code</td>
+            </tr>
+        </tfoot>
+        <tr>
+            <td>{{campaign.Campaign.datesent}}</td>
+            <td>{{campaign.EmailTemplate.name}}</td>
+            <td>{{hashdict[campaign.EmailResponse.emailID]| default("No match")}}</td>
+            <td>{{campaign.EmailResponse.response}}</td>
+        </tr>
+</table>
+{% endblock %}

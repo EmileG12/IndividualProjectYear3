@@ -1,20 +1,27 @@
-{extends "base.html"}
+{%extends "base.html"%}
 {% block content %}
-<table style="width:100%", border="1">
-        <tr>
-            <td>Campaign Date</td>
-            <td>Template</td>
-            <td>Click responses</td>
-            <td>Post responses</td>
-            <td>Download responses</td>
-        </tr>
-        {% for row in responses %}
-        <tr>
-            <td> r</td>
-            <td>{{Location[item]}}</td>
-            <td>{{Status[item]}}</td>
-        </tr>
-        {% endfor %}
-</table>
-
+<div class="column is-4 is-offset-4">
+    <h3 class="title">Select campaign</h3>
+    <form method="POST" action="/getresponses" enctype="multipart/form-data">
+            <div class="select  is-fullwidth  is-block  is-large">
+            <select name="campaignid">
+                {% for campaign in campaigns -%}
+                <option value="{{campaign.Campaign.id}}"> {{campaign.Campaign.datesent}} {{campaign.EmailTemplate.name}}</option>
+                {% endfor %}
+            </select>
+            </div>
+            <div class="field">
+                <div class="control">
+                    <input type="checkbox" name="matchemails" id="Add list of emails and hashes for matching" value="yes">
+                </div>
+            </div>
+            <div class="field">
+                <div class="control">
+                    <input class="input is-large" type="file" name="emailhashfile" placeholder="File containing emails and hashes">
+                </div>
+            </div>
+            <button class="button is-block is-info is-large is-fullwidth">Retrieve response table</button>
+        </form>
+    </div>
+</div>
 {% endblock %}

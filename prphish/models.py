@@ -18,7 +18,7 @@ class User(UserMixin, db.Model):
 class Campaign(db.Model):
     id = db.Column(db.String(70), primary_key=True)
     datesent = db.Column(db.DateTime())
-    templatehash = db.Column(db.String(100))
+    templatehash = db.Column(db.String(), db.ForeignKey("email_template.hash"))
     emailhashlist = db.Column(db.String())
 
 # Database containing all responses to all campaigns
@@ -26,7 +26,7 @@ class Campaign(db.Model):
 class EmailResponse(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     emailID = db.Column(db.String(70))
-    campaignId = db.Column(db.String())
+    campaignId = db.Column(db.String(), db.ForeignKey("campaign.id"))
     responseDate = db.Column(db.DateTime())
     response = db.Column(db.Integer())
 
@@ -40,3 +40,5 @@ class EmailTemplate(db.Model):
     path = db.Column(db.String(100))
     responsepagetemplatename = db.Column(db.String())
     materialtemplatename = db.Column(db.String())
+
+responseTypes = {1:"Click",2:"Post",3:"Download"}

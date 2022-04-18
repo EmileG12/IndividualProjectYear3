@@ -47,4 +47,7 @@ def create_app():
     from .emailmanager import emailmanager as emailmanager_blueprint
     app.register_blueprint(emailmanager_blueprint)
 
+    from .datamanager import datamanager as datamanager_blueprint
+    app.register_blueprint(datamanager_blueprint)
+
     return app

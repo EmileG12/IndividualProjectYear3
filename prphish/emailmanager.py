@@ -8,6 +8,7 @@ from jinja2 import Template
 import hashlib
 # Bcrypt package install needed
 import bcrypt
+import json
 
 from flask import Blueprint, render_template, redirect, url_for
 import io
@@ -55,28 +56,57 @@ def sendmassmail(sendaddr, password, FakeName, subject, toaddrfile, templatehash
     templatefile = open(EmailTemplate.query.filter_by(hash=templatehash).first().path, "r")
     msg = templatefile.read()
     # Read file containing addresses to send to as a list
-    toaddrteststring = ""
-    toaddrlist = toaddrfile.decode("utf-8").strip().replace(" ", "").split(",")
-    for toaddr in toaddrlist:
-        toaddrhash = bcrypt.hashpw(toaddr.encode('utf-8'),bcrypt.gensalt()).decode('utf-8')
-        hashlist = hashlist + toaddr + " , " + toaddrhash + " ; "
-        templatePrep = Template(msg)
-        message = templatePrep.render(link = linkmaker(toaddrhash, campaignId))
-        message = MIMEText(message, 'html')
-        message['From'] = FakeName
-        message['Subject'] = subject
-        message['To'] = toaddr
-        text = message.as_string()
-        #server.sendmail(sendaddr, toaddr, text)
-    #server.quit()
-    #fuckingIO = io.StringIO()
-    #fuckingIO.write(hashlist)
-    print(hashlist)
-    hashlistbytes = io.BytesIO(bytes(hashlist, "utf-8"))
-    #fuckingIO.seek(0)
-   # flash(hashlist)
-    return send_file(path_or_file=hashlistbytes, mimetype="text/plain", as_attachment=True, attachment_filename="hashlistatt.txt")
+    toaddrstring=toaddrfile.decode("utf-8")
+    prepdict = json.loads(toaddrstring)
+    if "email_hashedlist" in prepdict:
+        tomailshashed = prepdict["email_hashedlist"]
+        for toaddr in tomailshashed:
+            toaddrhash = tomailshashed[toaddr]
+            send_phishmail(server, msg, toaddr, toaddrhash, campaignId, FakeName, subject, sendaddr)
+        flash("Emails sent, no new addresses detected")
+        return render_template("sendemail.html", templates = EmailTemplate.query.order_by(EmailTemplate.id))
 
+    if "new_emails" in prepdict:
+        tomailsnew = prepdict["new_emails"]
+        topairlist = []
+        for toaddr in tomailsnew:
+            toaddrhash = bcrypt.hashpw(toaddr.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+            toaddrpair = {toaddr:toaddrhash}
+            topairlist.append(toaddrpair)
+            send_phishmail(server, msg, toaddr, toaddrhash, campaignId, FakeName, subject, sendaddr)
+        if "email_hashedlist" in prepdict:
+            tomailshashed = prepdict["email_hashedlist"]
+            for toaddr in tomailshashed:
+                toaddr = toaddrpair["address"]
+                toaddrhash = toaddrpair["hash"]
+                send_phishmail(server, msg, toaddr, toaddrhash, campaignId, FakeName, subject, sendaddr)
+            newhashdict = tomailshashed + topairlist
+            prepdict["email_hashedlist"] = newhashdict
+            prepdict["new_emails"] = []
+            jsonstring = json.dumps(prepdict)
+            jsonbytes = io.BytesIO(bytes(jsonstring, "utf-8"))
+            flash("Emails sent and hash pairs added, keep the file you've received securely in order to retrieve data about specific addresses later")
+            return send_file(path_or_file=jsonbytes, mimetype="text/plain", as_attachment=True,
+                      attachment_filename="hashlistatt.txt")
+        else:
+            prepdict["email_hashedlist"] = topairlist
+            prepdict["new_emails"] = []
+            jsonstring = json.dumps(prepdict)
+            jsonbytes = io.BytesIO(bytes(jsonstring, "utf-8"))
+            flash(
+                "Emails sent, keep the file you've received securely in order to retrieve data about specific addresses later")
+            return send_file(path_or_file=jsonbytes, mimetype="text/plain", as_attachment=True,
+                             attachment_filename="hashlistatt.txt")
+
+def send_phishmail(server,msg, toaddr,toaddrhash, campaignId, FakeName,subject, sendaddr):
+    templatePrep = Template(msg)
+    message = templatePrep.render(link=linkmaker(toaddrhash, campaignId))
+    message = MIMEText(message, 'html')
+    message['From'] = FakeName
+    message['Subject'] = subject
+    message['To'] = toaddr
+    text = message.as_string()
+    server.sendmail(sendaddr, toaddr, text)
 
 
 

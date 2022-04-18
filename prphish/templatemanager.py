@@ -54,7 +54,7 @@ def addtemplate_post():
         current_app.config['UPLOAD_FOLDER'], templateFile.filename)
     templateFile.save(templatePath)
     newTemplate = EmailTemplate(
-        hash=templateHash, name=templateName, path=templatePath, reponsepagepath=responsepagepath)
+        hash=templateHash, name=templateName, path=templatePath, responsepagetemplatename=responsepagepath)
     db.session.add(newTemplate)
     db.session.commit()
     return redirect(url_for('.template', id=newTemplate.id))
