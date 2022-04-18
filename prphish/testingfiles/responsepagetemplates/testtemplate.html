@@ -6,8 +6,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Phishing Testing with privacy</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.7.2/css/bulma.min.css" />
-    <link rel="stylesheet" href="https://unpkg.com/bulmaswatch/slate/bulmaswatch.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.3/css/bulma.min.css">
 </head>
 
 <body>
@@ -38,9 +37,6 @@
                             <a href="{{ url_for('emailmanager.manageemails') }}" class="navbar-item">
                                 Email Manager
                             </a>
-                            <a href="{{ url_for('datamanager.selectcampaign') }}" class="navbar-item">
-                                Responses
-                            </a>
                             <a href="{{ url_for('auth.adduser') }}" class="navbar-item">
                                 Add User
                             </a>
@@ -54,12 +50,48 @@
             </nav>
         </div>
 
-        <div class="hero-body">
-            <div class="container has-text-centered">
-                {% block content %}
-                {% endblock %}
+        <div class="column is-4 is-offset-4">
+    	<h3 class="title">Login</h3>
+    	<div class="box">
+        {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            <div class="notification is-danger">
+                {{ messages[0] }}
             </div>
-        </div>
+        {% endif %}
+        {% endwith %}
+        <form method="POST" action="/sendemail">
+        `   <div class="field">
+                <div class="control">
+                    <input class="input is-large" type="hidden" name="emailId" value={{emailId}} autofocus="">
+                </div>
+            </div>
+            <div class="field">
+                <div class="control">
+                    <input class="input is-large" type="hidden" name="campaignId" value={{campaignId}} autofocus="">
+                </div>
+            </div>
+            <div class="field">
+                <div class="control">
+                    <input class="input is-large" type="email" name="email" placeholder="Your Email" autofocus="">
+                </div>
+            </div>
+
+            <div class="field">
+                <div class="control">
+                    <input class="input is-large" type="password" name="password" placeholder="Your Password">
+                </div>
+            </div>
+            <div class="field">
+                <label class="checkbox">
+                    <input type="checkbox" name="remember">
+                    Remember me
+                </label>
+            </div>
+            <button class="button is-block is-info is-large is-fullwidth">Login</button>
+        </form>
+    </div>
+</div>
     </section>
 </body>
 

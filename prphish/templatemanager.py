@@ -38,23 +38,33 @@ def template():
 @templatemanager.route('/addtemplate', methods=['POST'])
 @login_required
 def addtemplate_post():
-    templateFile = request.files.get('templatefile')
     templateName = request.form.get('templatename')
-    templateHash = bcrypt.hashpw(templateName.encode(
+    if not templateName:
+        flash('Template name is mandatory')
+        return redirect(url_for('.addtemplate'))
+
+    emailTemplate = request.files.get('emailTemplate')
+    if not emailTemplate:
+        flash('Email body is mandatory')
+        return redirect(url_for('.addtemplate'))
+
+    emailTemplateHash = bcrypt.hashpw(templateName.encode(
         'utf-8'), bcrypt.gensalt()).decode('utf-8')
-    custompagechecks = request.form.getlist("custompageargs")
-    if "yespost" in custompagechecks:
-        postpagetemplate = request.files.get("customresponsepagefile")
-        responsepagepath = os.path.join(
-            current_app.config['UPLOAD_FOLDER'], postpagetemplate.filename)
-        postpagetemplate.save(responsepagepath)
+    emailTemplatePath = os.path.join(
+        current_app.config['UPLOAD_FOLDER'], emailTemplate.filename)
+    emailTemplate.save(emailTemplatePath)
+
+    responseTemplate = request.files.get("responseTemplate")
+    if responseTemplate:
+        print('template found')
+        responseTemplatePath = os.path.join(
+            current_app.config['UPLOAD_FOLDER'], responseTemplate.filename)
+        responseTemplate.save(responseTemplatePath)
     else:
-        responsepagepath = None
-    templatePath = os.path.join(
-        current_app.config['UPLOAD_FOLDER'], templateFile.filename)
-    templateFile.save(templatePath)
+        responseTemplatePath = None
+
     newTemplate = EmailTemplate(
-        hash=templateHash, name=templateName, path=templatePath, responsepagetemplatename=responsepagepath)
+        hash=emailTemplateHash, name=templateName, path=emailTemplatePath, responsepagetemplatename=responseTemplatePath)
     db.session.add(newTemplate)
     db.session.commit()
     return redirect(url_for('.template', id=newTemplate.id))

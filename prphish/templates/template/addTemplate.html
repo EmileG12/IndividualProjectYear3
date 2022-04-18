@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="column is-4 is-offset-4">
+<div class="column ">
     <h3 class="title">Add Template</h3>
 
     <div class="box">
@@ -14,37 +14,66 @@
         {% endwith %}
         <form method="POST" action="/addtemplate" enctype="multipart/form-data">
             <div class="field">
-                <div class="control">
-                    <input class="input is-large" type="text" name="templatename" placeholder="Template Name"
-                        autofocus="">
+
+            </div>
+
+            <div class="field is-horizontal">
+                <div class="field-label is-normal">
+                    <label class="label">Template name (*)</label>
+                </div>
+                <div class="field-body">
+                    <div class="control">
+                        <input class="input is-large" type="text" name="templatename" placeholder="Template Name"
+                            autofocus="">
+                    </div>
                 </div>
             </div>
-            <div class="field">
-                <div class="control">
-                    <input class="input is-large" type="file" name="templatefile" placeholder="Template data file">
+
+            <div class="field is-horizontal">
+                <div class="field-label is-normal">
+                    <label class="label">Email body (*)</label>
+                </div>
+                <div class="field-body">
+                    <div class="control">
+                        <input class="input is-large" type="file" name="emailTemplate" placeholder="Template data file">
+                    </div>
                 </div>
             </div>
-            <div class="field">
-                <div class="control">
-                    <input type="checkbox" name="custompageargs" value="yespost">
+
+            <div class="field is-horizontal">
+                <div class="field-label is-normal">
+                    <label class="label">Response page (optional)</label>
+                </div>
+                <div class="field-body">
+                    <div class="control">
+                        <input class="input is-large" type="file" name="customresponsepagefile"
+                            placeholder="Custom response page file">
+                    </div>
                 </div>
             </div>
-            <div class="field">
-                <div class="control">
-                    <input class="input is-large" type="file" name="customresponsepagefile" placeholder="Custom response page file">
+
+            <div class="field is-horizontal">
+                <div class="field-label is-normal">
+                    <label class="label">Training Material (optional)</label>
+                </div>
+                <div class="field-body">
+                    <div class="control">
+                        <input class="input is-large" type="file" name="custommaterialfile"
+                            placeholder="Custom response page file">
+                    </div>
                 </div>
             </div>
-            <div class="field">
-                <div class="control">
-                    <input type="checkbox" name="custompageargs" value="yesmaterial">
+            <div class="field is-horizontal">
+                <div class="field-label is-normal">
+                    <!-- spacing -->
+                </div>
+                <div class="field-body"></div>
+                <div class="field">
+                    <div class="control">
+                        <button class="button is-block is-info is-large ">Send</button>
+                    </div>
                 </div>
             </div>
-            <div class="field">
-                <div class="control">
-                    <input class="input is-large" type="file" name="custommaterialfile" placeholder="Custom response page file">
-                </div>
-            </div>
-            <button class="button is-block is-info is-large is-fullwidth">Send</button>
         </form>
     </div>
 </div>
