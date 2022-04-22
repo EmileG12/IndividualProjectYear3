@@ -13,10 +13,6 @@
         {% endif %}
         {% endwith %}
         <form method="POST" action="/addtemplate" enctype="multipart/form-data">
-            <div class="field">
-
-            </div>
-
             <div class="field is-horizontal">
                 <div class="field-label is-normal">
                     <label class="label">Template name (*)</label>
@@ -28,7 +24,6 @@
                     </div>
                 </div>
             </div>
-
             <div class="field is-horizontal">
                 <div class="field-label is-normal">
                     <label class="label">Email body (*)</label>
@@ -46,8 +41,7 @@
                 </div>
                 <div class="field-body">
                     <div class="control">
-                        <input class="input is-large" type="file" name="customresponsepagefile"
-                            placeholder="Custom response page file">
+                        <input class="input is-large" type="file" name="responseTemplate" placeholder="Custom response page file">
                     </div>
                 </div>
             </div>
@@ -58,7 +52,7 @@
                 </div>
                 <div class="field-body">
                     <div class="control">
-                        <input class="input is-large" type="file" name="custommaterialfile"
+                        <input class="input is-large" type="file" name="materialTemplate"
                             placeholder="Custom response page file">
                     </div>
                 </div>

@@ -14,35 +14,58 @@ def gotphish():
     emailId = request.args.get('s')
     campaignId = request.args.get('x')
     amidownloading = request.args.get('p')
+    print(amidownloading)
     templateId = Campaign.query.filter_by(id=campaignId).first().templatehash
     responsetemplatename = EmailTemplate.query.filter_by(hash=templateId).first().responsepagetemplatename
     materialtemplatename = EmailTemplate.query.filter_by(hash=templateId).first().materialtemplatename
     if responsetemplatename is not None:
         record_response(emailId,campaignId,datetime.utcnow(),1)
+        downloadLink = request.host_url + "gotphish?s={}&x={}&p=1".format(emailId, campaignId) + '"'
         templateLoader = jinja2.FileSystemLoader(current_app.config['UPLOAD_FOLDER'])
         templateEnv = jinja2.Environment(loader=templateLoader)
         template = templateEnv.get_template(responsetemplatename)
-        return template.render(emailId=emailId, campaignId=campaignId)
+        return template.render(emailId=emailId, campaignId=campaignId,downloadLink=downloadLink)
     if amidownloading == 1:
         record_response(emailId, campaignId, datetime.utcnow(), 3)
-        return render_template('sendemail.html')
+        return material_render(materialtemplatename)
     record_response(emailId,campaignId, datetime.utcnow(), 1)
-    return render_template('sendemail.html')
+    return material_render(materialtemplatename)
+
+def material_render(materialtemplatename):
+    if materialtemplatename is not None:
+        templateLoader = jinja2.FileSystemLoader(current_app.config['UPLOAD_FOLDER'])
+        templateEnv = jinja2.Environment(loader=templateLoader)
+        template = templateEnv.get_template(materialtemplatename)
+        return template.render()
+    else:
+        render_template("sendemail.html")
 
 
 @responsemanager.route('/gotphish', methods=['POST'])
 def gotphish_post():
-    emailId = request.form.get("s")
-    campaignId = request.form.get("x")
+    emailId = request.form.get("emailId")
+    campaignId = request.form.get("campaignId")
+    print(campaignId)
+    templateId = Campaign.query.filter_by(id=campaignId).first().templatehash
+    materialtemplatename = EmailTemplate.query.filter_by(hash=templateId).first().materialtemplatename
+    print(materialtemplatename)
     record_response(emailId, campaignId, datetime.utcnow(), 2)
-    return render_template("login.html")
+    return material_render(materialtemplatename)
 
 def record_response(emailId, campaignId, responseDate, responseCode):
-        responseRow = EmailResponse(emailID=emailId, campaignId=campaignId, responseDate=responseDate,
+        responseRow = EmailResponse(emailId=emailId, campaignId=campaignId, responseDate=responseDate,
                                     response=responseCode)
         db.session.add(responseRow)
         db.session.commit()
 
+@responsemanager.route('/gotdownload', methods =['GET'])
+def download_phish_get():
+    emailId= request.args.get('s')
+    campaignId = request.args.get('x')
+    templateId = Campaign.query.filter_by(id=campaignId).first().templatehash
+    materialtemplatename = EmailTemplate.query.filter_by(hash=templateId).first().materialtemplatename
+    record_response(emailId,campaignId,datetime.utcnow(), 3)
+    return material_render(materialtemplatename)
 
 def material_render(materialtemplatename):
     if materialtemplatename is not None:

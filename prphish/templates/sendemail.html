@@ -1,57 +1,124 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="column is-4 is-offset-4">
-    <h3 class="title">Send Email</h3>
+<div class="column">
+    <h3 class="title">Send Campaign</h3>
 
-    <div class="box">
-        {% with messages = get_flashed_messages() %}
-        {% if messages %}
+    <form method="POST" action="/sendemail" enctype="multipart/form-data">
+        <div class="box">
+            {% with messages = get_flashed_messages() %}
+            {% if messages %}
             <div class="notification is-danger">
                 {{ messages[0] }}
             </div>
-        {% endif %}
-        {% endwith %}
-        <form method="POST" action="/sendemail" enctype="multipart/form-data">
-            <div class="field">
-                <div class="control">
-                    <input class="input is-large" type="text" name="sendaddr" placeholder="Sender Address" autofocus="">
+            {% endif %}
+            {% endwith %}
+            <p> SMTP server</p>
+            <div class="field has-addons">
+                <div class="select">
+                    <select name="serverType">
+                        <option value="smtp">smtp</option>
+                        <option value="smtp_ssl">smtp SSL</option>
+                        <option value="test">test</option>
+                    </select>
+                </div>
+                <p class="control is-expanded">
+                    <input class="input is-fullwidth" name="serverAddress" type="text" placeholder="address">
+                </p>
+                <p class="control">
+                    <input class="input" name="serverPort" type="number" placeholder="port">
+                </p>
+            </div>
+
+            <div class="field is-horizontal">
+                <div class="field-label is-normal">
+                    <label class="label">username</label>
+                </div>
+                <div class="field-body">
+                    <div class="field">
+                        <div class="control">
+                            <input class="input is-large" type="text" name="serverUsername" placeholder="Email"
+                                autofocus="">
+                        </div>
+                    </div>
                 </div>
             </div>
-             <div class="field">
-                <div class="control">
-                    <input class="input is-large" type="password" name="password" placeholder="Password of sender address" autofocus="">
+            <div class="field is-horizontal">
+                <div class="field-label is-normal">
+                    <label class="label">password</label>
+                </div>
+                <div class="field-body">
+                    <div class="field">
+                        <div class="control">
+                            <input class="input is-large" type="password" name="serverPassword" placeholder="password"
+                                autofocus="">
+                        </div>
+                    </div>
                 </div>
             </div>
-            <div class="field">
-                <div class="control">
-                    <input class="input is-large" type="text" name="toaddr" placeholder="Receiving Address" autofocus="">
+        </div>
+
+        <div class="box">
+
+            <div class="field is-horizontal">
+                <div class="field-label is-normal">
+                    <label class="label">Subject (*)</label>
+                </div>
+                <div class="field-body">
+                    <div class="field">
+                        <div class="control">
+                            <input class="input is-large" type="text" name="subject" placeholder="Subject" autofocus="">
+                        </div>
+                    </div>
                 </div>
             </div>
-            <div class="field">
-                <div class="control">
-                    <input class="input is-large" type="text" name="subject" placeholder="Subject" autofocus="">
+
+            <div class="field is-horizontal">
+                <div class="field-label is-normal">
+                    <label class="label">Template (*)</label>
+                </div>
+                <div class="field-body">
+                    <div class="select  is-fullwidth  is-block  is-large">
+                        <select name="templateHash">
+                            {% for template in templates -%}
+                            <option value="{{template.hash}}"> {{template.name}} </option>
+                            {% endfor %}
+                        </select>
+                    </div>
                 </div>
             </div>
-            <div class="field">
-                <div class="control">
-                    <input class="input is-large" type="text" name="fakename" placeholder="Fake name for phishing use" autofocus="">
+
+            <div class="field is-horizontal">
+                <div class="field-label is-normal">
+                    <label class="label">Sender (*)</label>
+                </div>
+                <div class="field-body">
+                    <div class="field">
+
+                        <div class="control">
+                            <input class="input is-large" type="text" name="sender" placeholder="Sender of the email"
+                                autofocus="">
+                        </div>
+                    </div>
                 </div>
             </div>
-            <div class="select  is-fullwidth  is-block  is-large">
-            <select name="templatepath">
-                {% for template in templates -%}
-                <option value="{{template.hash}}"> {{template.name}} </option>
-                {% endfor %}
-            </select>
-            </div>
-            <div class="field">
-                <div class="control">
-                    <input class="input is-large" type="file" name="toaddrfile" placeholder="List of addresses to send to">
+
+            <div class="field is-horizontal">
+                <div class="field-label is-normal">
+                    <label class="label">Recipients (*)</label>
+                </div>
+                <div class="field-body">
+                    <div class="field">
+                        <div class="control">
+                            <input class="input is-large" type="file" name="recipientsFile"
+                                placeholder="List of addresses to send to">
+                        </div>
+                    </div>
                 </div>
             </div>
             <button class="button is-block is-info is-large is-fullwidth">Send</button>
-        </form>
-    </div>
+        </div>
+    </form>
+</div>
 </div>
 {% endblock %}

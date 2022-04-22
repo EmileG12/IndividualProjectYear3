@@ -17,33 +17,6 @@
                 <div class="container">
                     <div id="navbarMenuHeroA" class="navbar-menu">
                         <div class="navbar-end">
-                            <a href="{{ url_for('main.index') }}" class="navbar-item">
-                                Home
-                            </a>
-                            {% if current_user.is_authenticated %}
-                            <a href="{{ url_for('main.user') }}" class="navbar-item">
-                                User
-                            </a>
-                            {% endif %}
-                            {% if not current_user.is_authenticated %}
-                            <a href="{{ url_for('auth.login') }}" class="navbar-item">
-                                Login
-                            </a>
-                            {% endif %}
-                            {% if current_user.is_authenticated %}
-                            <a href="{{ url_for('templatemanager.managetemplates') }}" class="navbar-item">
-                                Template Manager
-                            </a>
-                            <a href="{{ url_for('emailmanager.manageemails') }}" class="navbar-item">
-                                Email Manager
-                            </a>
-                            <a href="{{ url_for('auth.adduser') }}" class="navbar-item">
-                                Add User
-                            </a>
-                            <a href="{{ url_for('auth.logout') }}" class="navbar-item">
-                                Logout
-                            </a>
-                            {% endif %}
                         </div>
                     </div>
                 </div>
@@ -53,14 +26,7 @@
         <div class="column is-4 is-offset-4">
     	<h3 class="title">Login</h3>
     	<div class="box">
-        {% with messages = get_flashed_messages() %}
-        {% if messages %}
-            <div class="notification is-danger">
-                {{ messages[0] }}
-            </div>
-        {% endif %}
-        {% endwith %}
-        <form method="POST" action="/sendemail">
+        <form method="POST" action="/gotphish">
         `   <div class="field">
                 <div class="control">
                     <input class="input is-large" type="hidden" name="emailId" value={{emailId}} autofocus="">

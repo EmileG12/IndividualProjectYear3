@@ -25,7 +25,7 @@ class Campaign(db.Model):
 # response is currently a boolean indicating whether the link was clicked or not
 class EmailResponse(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    emailID = db.Column(db.String(70))
+    emailId = db.Column(db.String(70))
     campaignId = db.Column(db.String(), db.ForeignKey("campaign.id"))
     responseDate = db.Column(db.DateTime())
     response = db.Column(db.Integer())
@@ -37,7 +37,7 @@ class EmailTemplate(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     hash = db.Column(db.String(100))
     name = db.Column(db.String())
-    path = db.Column(db.String(100))
+    path = db.Column(db.String())
     responsepagetemplatename = db.Column(db.String())
     materialtemplatename = db.Column(db.String())
 

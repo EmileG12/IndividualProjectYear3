@@ -42,6 +42,6 @@ def emailmatching(emailhashfile, campaign):
         flash("No matches found, please try another file")
         return render_template("datamanager.html",
                                campaigns=db.session.query(Campaign, EmailTemplate).join(EmailTemplate))
-    elif matchcount < (len(hashdict) / 4):
+    elif matchcount < (len(hashpairlist) / 4):
         flash("Less than 25% of addresses matched, data or file may be outdated")
         return render_template("dataresponse.html", campaign=campaign)

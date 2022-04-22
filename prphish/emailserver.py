@@ -2,53 +2,68 @@ import smtplib
 from urllib import response
 from jinja2 import Template
 from email.mime.text import MIMEText
+from urllib.parse import urlencode
 
 
 class FakeSmtp:
     file = None
-
-    def __init__(self):
-        self.file = open('tmp/sent.txt', 'w')
+    counter = 0
 
     def sendmail(self, fromAddr, toAddr, msg):
-        self.file.write('from: {} \n'.format(fromAddr))
-        self.file.write('to: {} \n'.format(toAddr))
-        self.file.write(msg)
-        self.file.write('\n\n')
+        self.counter += 1
+        with open('/tmp/mail{}.html'.format(self.counter), 'w') as file:
+            # self.file.write('from: {} \n'.format(fromAddr))
+            # self.file.write('to: {} \n'.format(toAddr))
+            file.write(msg)
 
-    def quit(self):
-        self.file.close()
+    def login(self, username, password):
+        pass
+
+    def starttls(self):
+        pass
+
 
 
 class EmailServer:
-    """ 
+    """
     """
     smtp = None
     responseAddress = ""
-
-    def __init__(self, responseAddress, type, serveraddress="", serverport=587):
+    serverUsername = ""
+    def __init__(self, responseAddress, type, serverAddress="", serverPort=587, serverUsername="", serverPassword=""):
         if type == 'smtp':
-            smtp = smtplib.SMTP(serveraddress, serverport)
+            self.smtp = smtplib.SMTP(serverAddress, serverPort)
         elif type == 'smtp_ssl':
-            server = smtplib.SMTP_SSL(serveraddress, serverport)
+            self.smtp = smtplib.SMTP(serverAddress, serverPort)
+            self.smtp.starttls()
         elif type == 'test':
-            server = FakeSmtp()
+            self.smtp = FakeSmtp()
         else:
+            print('Email provider not supported')
             raise Exception('Email provider not supported')
+        print("Username: " + serverUsername + "Password: " + serverPassword)
+        try:
+            self.smtp.login(serverUsername, serverPassword)
+            self.serverUsername=serverUsername
+        except:
+            print('smtp authentication failed')
+            raise Exception('smtp authentication failed')
         self.responseAddress = responseAddress
 
     def getLink(self, hash, campaignId):
-        return self.responseAddress + "gotphish?s={}&x={}".format(hash, campaignId)
+        params = {'s': hash, 'x': campaignId}
+        return self.responseAddress + "gotphish?" + urlencode(params)
 
-    def send_phish(self, fromAddr, toAddr, toAddrHash, subject, template, campaignId):
+    def send_phish(self, fromAddr, toAddr,  subject, template, toAddrHash, campaignId):
         bodyText = Template(template).render(
-            link=self.getLink(toAddrHash, campaignId))
+            phishlink=self.getLink(toAddrHash, campaignId))
         message = MIMEText(bodyText, 'html')
         message['From'] = fromAddr
         message['Subject'] = subject
         message['To'] = toAddr
         msg = message.as_string()
-        self.smtp.sendmail(fromAddr, toAddr, msg)
+        self.smtp.sendmail(self.serverUsername, toAddr, msg)
 
     def __del__(self):
-        self.smtp.quit()
+        if self.smtp:
+            self.smtp.quit()
