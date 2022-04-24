@@ -1,8 +1,10 @@
+from .models import record_response, ResponseTypes
 import smtplib
 from urllib import response
 from jinja2 import Template
 from email.mime.text import MIMEText
 from urllib.parse import urlencode
+from datetime import datetime
 
 
 class FakeSmtp:
@@ -23,13 +25,13 @@ class FakeSmtp:
         pass
 
 
-
 class EmailServer:
     """
     """
     smtp = None
     responseAddress = ""
     serverUsername = ""
+
     def __init__(self, responseAddress, type, serverAddress="", serverPort=587, serverUsername="", serverPassword=""):
         if type == 'smtp':
             self.smtp = smtplib.SMTP(serverAddress, serverPort)
@@ -44,7 +46,7 @@ class EmailServer:
         print("Username: " + serverUsername + "Password: " + serverPassword)
         try:
             self.smtp.login(serverUsername, serverPassword)
-            self.serverUsername=serverUsername
+            self.serverUsername = serverUsername
         except:
             print('smtp authentication failed')
             raise Exception('smtp authentication failed')
@@ -62,7 +64,9 @@ class EmailServer:
         message['Subject'] = subject
         message['To'] = toAddr
         msg = message.as_string()
+        # add a record to keep track of the number of sent emails
         self.smtp.sendmail(self.serverUsername, toAddr, msg)
+        record_response(toAddrHash, campaignId,datetime.utcnow(), ResponseTypes.SENT)
 
     def __del__(self):
         if self.smtp:

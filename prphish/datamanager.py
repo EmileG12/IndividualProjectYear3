@@ -2,7 +2,8 @@ import json
 
 import jinja2
 from flask import Blueprint, render_template, redirect, url_for, request, flash, send_file, current_app
-from .models import db, EmailResponse, EmailTemplate, Campaign, responseTypes
+from .models import db, EmailResponse, EmailTemplate, Campaign, ResponseTypes
+from sqlalchemy import func
 
 
 datamanager = Blueprint('datamanager', __name__)
@@ -18,17 +19,36 @@ def selectcampaign():
 def selectcampaign_post():
     campaignId = request.form.get("campaignid")
     matchemails = request.form.get("matchemails")
-    campaign = db.session.query(Campaign, EmailTemplate).filter_by(
-        id=campaignId).join(EmailTemplate).join(EmailResponse)
-    if "yes" in matchemails:
-        emailhashfile = request.form.get("emailhashfile")
-        return emailmatching(emailhashfile, campaign)
-    responses = {}
-    for x in responseTypes:
-        r = db.session.query(EmailResponse).filter_by(
-            campaignId=campaignId).filter_by(response=x).count()
-        responses[x] = r
-    return render_template("dataresponse.html", campaign=campaign)
+    responses = db.session.query(
+        Campaign,
+        EmailTemplate,
+        EmailResponse.response.label('code'),
+        func.count(EmailResponse.response).label('sum')
+    ).filter_by(id=campaignId).join(EmailTemplate).join(EmailResponse).group_by(EmailResponse.response)
+    # if matchemails:
+    #     emailhashfile = request.form.get("emailhashfile")
+    #     return emailmatching(emailhashfile, campaign)
+    types = ResponseTypes.getDict()
+    sums = {}
+    total = 0
+    #for each type of code, record the sum
+    for row in responses:
+        #SENT is a special case, we went to show it at the bottom of the table
+        if types[row.code] == 'SENT':
+            total = row.sum
+        else:
+            sums[row.code] = row.sum
+    #Show 0 if there are no responses of a certain type
+    for t in types:
+        if not t in sums:
+            sums[t] = 0
+    print("Campaign ID : " + campaignId)
+    return render_template("dataresponse.html",
+                           name=responses.first().EmailTemplate.name,
+                           datesent=responses.first().Campaign.datesent,
+                           types=types,
+                           sums=sums,
+                           total=total)
 
 
 def emailmatching(emailhashfile, campaign):

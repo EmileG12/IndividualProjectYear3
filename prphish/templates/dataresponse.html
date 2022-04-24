@@ -1,33 +1,51 @@
 {%extends "base.html"%}
 {% block content %}
+
+
+<h1 class="title"> Phishing Campaign Results</h1>
 <div class="box">
-        {% with messages = get_flashed_messages() %}
-        {% if messages %}
-            <div class="notification is-danger">
-                {{ messages[0] }}
-            </div>
-        {% endif %}
-        {% endwith %}
-</div>
-<table style="width:100%", border="1">
-        <thead>
-            <tr>
-                <td>Campaign Date</td>
-                <td>Template</td>
-                <td>Response Code</td>
-            </tr>
-        </thead>
-        <tfoot>
-            <tr>
-                <td>Campaign Date</td>
-                <td>Template</td>
-                <td>Response Code</td>
-            </tr>
-        </tfoot>
-        <tr>
-            <td>{{campaign.Campaign.datesent}}</td>
-            <td>{{campaign.EmailTemplate.name}}</td>
-            <td>{{campaign.EmailResponse.response}}</td>
-        </tr>
-</table>
-{% endblock %}
+    {% with messages = get_flashed_messages() %}
+    {% if messages %}
+    <div class="box">
+        <div class="notification is-danger">
+            {{ messages[0] }}
+        </div>
+    </div>
+    {% endif %}
+    {% endwith %}
+
+
+    <div class="box">
+        <h2 class="subtitle has-text-left"><span class="tag is-white">Template used</span> <span
+                class="has-text-weight-bold">{{ name }}
+            </span></h2>
+        <h2 class="has-text-left"><span class="tag is-white">Date sent</span> {{ datesent }}
+        </h2>
+        <br>
+        <table class="table is-bordered has-background-white">
+            <thead>
+                <tr>
+                    <td class="has-text-weight-bold">Response Type</td>
+                    <td class="has-text-weight-bold">Number of hits</td>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- work around variable scope --->
+                {% for t in types -%}
+                {% if types[t] != 'SENT' %}
+                <tr>
+                    <td>{{types[t]}}</td>
+                    <td>{{sums[t]}}</td>
+                </tr>
+                {% endif %}
+                {% endfor %}
+            </tbody>
+            <tfoot>
+                <tr>
+                    <td class="has-text-weight-bold">Total email sent</td>
+                    <td>{{total}}</td>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+    {% endblock %}

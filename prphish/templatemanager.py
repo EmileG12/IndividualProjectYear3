@@ -67,10 +67,14 @@ def addtemplate_post():
     if responseTemplate:
         responseTemplateCheck = (True, False)
         print(responseTemplateCheck)
-        rtemplate = jinja2.Environment(loader=jinja2.BaseLoader).from_string(responseTemplate.read().decode("utf-8"))
-        checkStrings = [str(uuid.uuid4()), str(uuid.uuid4())]
-        downCheckString = str(uuid.uuid4())
-        checkTemp = rtemplate.render(emailId=checkStrings[0], campaignId=checkStrings[1], downloadLink=downCheckString)
+        try:
+            rtemplate = jinja2.Environment(loader=jinja2.BaseLoader).from_string(responseTemplate.read().decode("utf-8"))
+            checkStrings = [str(uuid.uuid4()), str(uuid.uuid4())]
+            downCheckString = str(uuid.uuid4())
+            checkTemp = rtemplate.render(emailId=checkStrings[0], campaignId=checkStrings[1], downloadLink=downCheckString)
+        except:
+            flash("Response template file cannot be rendered, please edit and reupload")
+            return render_template("template/addTemplate.html")
         if (all(x in checkTemp for x in checkStrings) and '<form method="POST" action="/gotphish">' in checkTemp) or downCheckString in checkTemp:
             print(responseTemplateCheck)
             responseTemplateCheck = (True, True)
