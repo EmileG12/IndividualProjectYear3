@@ -15,30 +15,35 @@ def selectcampaign():
     return render_template("datamanager.html", campaigns=prepTable)
 
 
-@datamanager.route("/getresponses", methods=['POST'])
+@datamanager.route("/responses", methods=['POST'])
 def selectcampaign_post():
+    if request.files.get('emailhashfile'):
+        return emailmatching()
+    else:
+        return simpleReport()
+
+
+def simpleReport():
     campaignId = request.form.get("campaignid")
-    matchemails = request.form.get("matchemails")
     responses = db.session.query(
         Campaign,
         EmailTemplate,
         EmailResponse.response.label('code'),
         func.count(EmailResponse.response).label('sum')
     ).filter_by(id=campaignId).join(EmailTemplate).join(EmailResponse).group_by(EmailResponse.response)
-    # if matchemails:
-    #     emailhashfile = request.form.get("emailhashfile")
-    #     return emailmatching(emailhashfile, campaign)
     types = ResponseTypes.getDict()
     sums = {}
     total = 0
-    #for each type of code, record the sum
+    click = 0
     for row in responses:
-        #SENT is a special case, we went to show it at the bottom of the table
+        # SENT is a special case, we went to show it at the bottom of the table
         if types[row.code] == 'SENT':
             total = row.sum
+        elif types[row.code] == 'CLICK':
+            click = row.sum
         else:
             sums[row.code] = row.sum
-    #Show 0 if there are no responses of a certain type
+    # Show 0 if there are no responses of a certain type
     for t in types:
         if not t in sums:
             sums[t] = 0
@@ -47,21 +52,83 @@ def selectcampaign_post():
                            name=responses.first().EmailTemplate.name,
                            datesent=responses.first().Campaign.datesent,
                            types=types,
+                           click=click,
                            sums=sums,
                            total=total)
 
 
-def emailmatching(emailhashfile, campaign):
-    emaildictprep = json.loads(emailhashfile)
-    hashpairlist = emaildictprep["email_hashedlist"]
+def emailmatching():
+    campaignId = request.form.get("campaignid")
+    rows = db.session.query(
+        Campaign,
+        EmailTemplate,
+        EmailResponse
+    ).filter_by(id=campaignId).join(EmailTemplate).join(EmailResponse)
+
+    # File containing all the email addresses to send the mail to
+    try:
+        emailFile = request.files.get('emailhashfile')
+        emailJson = emailFile.read().decode("utf-8")
+        emaildictprep = json.loads(emailJson)
+        hashpairlist = emaildictprep["email_hashedlist"]
+        # invert key/values
+        emailDict = {v: k for k, v in hashpairlist.items()}
+    except:
+        flash("Invalid email file")
+        return redirect(url_for('datamanager.selectcampaign'))
+
+    types = ResponseTypes.getDict()
+    # check if the email list is relevant
     matchcount = 0
-    for row in campaign:
-        if row.EmailResponse.emailID in hashpairlist.values():
+
+    # total sent
+    total = 0
+    click = 0
+    sums = {}
+    for t in types:
+        sums[t] = 0
+
+    # individual responses
+    responses = {}
+    for row in rows:
+        id = row.EmailResponse.emailId
+        name = 'N/A'
+        if id in emailDict:
+            name = emailDict[id]
             matchcount = matchcount + 1
+        if ResponseTypes(row.EmailResponse.response) != ResponseTypes.SENT:
+            if ResponseTypes(row.EmailResponse.response) == ResponseTypes.CLICK:
+                click += 1
+            else:
+                sums[row.EmailResponse.response] += 1
+            if not id in responses:
+                responses[id] = {
+                    'name': name,
+                }
+            type = types[row.EmailResponse.response]
+            if not type in responses[id]:
+                responses[id][type] = 1
+            else:
+                responses[id][type] += 1
+        else:
+            total += 1
+
+    for t in types:
+        if not t in sums:
+            sums[t] = 0
+
     if matchcount == 0:
+        print('not match')
         flash("No matches found, please try another file")
-        return render_template("datamanager.html",
-                               campaigns=db.session.query(Campaign, EmailTemplate).join(EmailTemplate))
-    elif matchcount < (len(hashpairlist) / 4):
+        return redirect(url_for('datamanager.selectcampaign'))
+
+    if matchcount < (len(hashpairlist) / 4):
         flash("Less than 25% of addresses matched, data or file may be outdated")
-        return render_template("dataresponse.html", campaign=campaign)
+    return render_template("dataresponse.html",
+                           name=rows.first().EmailTemplate.name,
+                           datesent=rows.first().Campaign.datesent,
+                           types=types,
+                           click=click,
+                           sums=sums,
+                           total=total,
+                           responses=responses)

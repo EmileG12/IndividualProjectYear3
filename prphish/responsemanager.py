@@ -32,13 +32,16 @@ def gotphish():
                     datetime.utcnow(), ResponseTypes.CLICK)
     return material_render(materialtemplatename)
 
+
 @responsemanager.route("/gotdownload")
 def gotdownload():
     emailId = request.args.get('s')
     campaignId = request.args.get('x')
     templateId = Campaign.query.filter_by(id=campaignId).first().templatehash
-    materialtemplatename = EmailTemplate.query.filter_by(hash=templateId).first().materialtemplatename
-    record_response(emailId, campaignId, datetime.utcnow(),ResponseTypes.DOWNLOAD)
+    materialtemplatename = EmailTemplate.query.filter_by(
+        hash=templateId).first().materialtemplatename
+    record_response(emailId, campaignId, datetime.utcnow(),
+                    ResponseTypes.DOWNLOAD)
     return material_render(materialtemplatename)
 
 

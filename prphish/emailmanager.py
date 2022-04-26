@@ -103,7 +103,7 @@ def sendmassmail(sender, subject, recipients, templateHash, msg, server):
     if not "email_hashedlist" in prepdict:
         prepdict["email_hashedlist"] = {}
 
-    listchecks = [False,False]
+    listchecks = [False, False]
     # calculate hash for new emails and add them to the previous ones
     if "new_emails" in prepdict:
         listchecks[0] = True
@@ -123,9 +123,11 @@ def sendmassmail(sender, subject, recipients, templateHash, msg, server):
         for toaddr in tomailshashed:
             toaddrhash = tomailshashed[toaddr]
             try:
-                server.send_phish(sender, toaddr, subject, msg, toaddrhash,campaignId)
+                server.send_phish(sender, toaddr, subject,
+                                  msg, toaddrhash, campaignId)
             except smtplib.SMTPSenderRefused:
-                flash("Sender address refused to send email, please fix the issue and try again")
+                flash(
+                    "Sender address refused to send email, please fix the issue and try again")
                 return redirect(url_for('emailmanager.sendemail'))
             except smtplib.SMTPRecipientsRefused:
                 recipientRefused = True
@@ -135,7 +137,8 @@ def sendmassmail(sender, subject, recipients, templateHash, msg, server):
                 flash("SMTP server disconnected, please try again")
                 return redirect(url_for('emailmanager.sendemail'))
         if recipientRefused:
-            print("System was not able to send to these addresses: " + refusedAddresses + "\n Emails were sent to the rest, please try again" )
+            print("System was not able to send to these addresses: " +
+                  refusedAddresses + "\n Emails were sent to the rest, please try again")
 
         hasher = hashlib.sha256()
         hasher.update(recipients)
@@ -149,7 +152,8 @@ def sendmassmail(sender, subject, recipients, templateHash, msg, server):
         return send_file(path_or_file=jsonbytes, mimetype="text/plain", as_attachment=True,
                          attachment_filename="hashlistatt.txt")
     if (not list[0]) and (not list[1]):
-        flash("new_emails or email_hashedlist not found, please edit email list and try again")
+        flash(
+            "new_emails or email_hashedlist not found, please edit email list and try again")
         return redirect(url_for('emailmanager.sendemail'))
 
     # error

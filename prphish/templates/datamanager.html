@@ -1,27 +1,86 @@
 {%extends "base.html"%}
 {% block content %}
-<div class="column is-4 is-offset-4">
-    <h3 class="title">Select campaign</h3>
-    <form method="POST" action="/getresponses" enctype="multipart/form-data">
-            <div class="select  is-fullwidth  is-block  is-large">
-            <select name="campaignid">
-                {% for campaign in campaigns -%}
-                <option value="{{campaign.Campaign.id}}"> {{campaign.Campaign.datesent}} {{campaign.EmailTemplate.name}}</option>
-                {% endfor %}
-            </select>
-            </div>
-            <div class="field">
-                <div class="control">
-                    <input type="checkbox" name="matchemails" id="Add list of emails and hashes for matching" value="yes">
-                </div>
-            </div>
-            <div class="field">
-                <div class="control">
-                    <input class="input is-large" type="file" name="emailhashfile" placeholder="File containing emails and hashes">
-                </div>
-            </div>
-            <button class="button is-block is-info is-large is-fullwidth">Retrieve response table</button>
-        </form>
+<h1 class="title"> Reports</h1>
+<div class="box">
+    {% with messages = get_flashed_messages() %}
+    {% if messages %}
+    <div class="box">
+        <div class="notification is-danger">
+            {{ messages[0] }}
+        </div>
     </div>
+    {% endif %}
+    {% endwith %}
+    <h4 class="subtitle">Single report</h3>
+        <form method="POST" action="/responses" enctype="multipart/form-data">
+            <div class="field is-horizontal">
+                <div class="field-label is-normal">
+                    <label class="label">Campaign:</label>
+                </div>
+                <div class="field-body">
+                    <div class="select  is-fullwidth  is-block  is-large">
+                        <select name="campaignid">
+                            {% for campaign in campaigns -%}
+                            <option value="{{campaign.Campaign.id}}"> {{campaign.Campaign.datesent}}
+                                {{campaign.EmailTemplate.name}}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="field is-horizontal">
+                <div class="field-label is-normal">
+                    <label class="label">Emails Hash list: (*)</label>
+                </div>
+                <div class="field-body">
+                    <div class="field">
+                        <div class="control">
+                            <input class="input is-large" type="file" name="emailhashfile"
+                                placeholder="File containing emails and hashes">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="field is-horizontal">
+                <div class="field-label is-normal">
+                    <label class="label"></label>
+                </div>
+                <div class="field-body">
+                    <button class="button is-block is-info">Show Report</button>
+                </div>
+            </div>
+        </form>
 </div>
+<div class="box">
+    <h4 class="subtitle">Previous Campaign </h3>
+        <form method="POST" action="/responsesIndividual" enctype="multipart/form-data">
+            <div class="field is-horizontal">
+                <div class="field-label is-normal">
+                    <label class="label">Campaign:</label>
+                </div>
+                <div class="field-body">
+                    <div class="select  is-fullwidth  is-block  is-large">
+                        <select name="campaignid">
+                            {% for campaign in campaigns -%}
+                            <option value="{{campaign.Campaign.id}}"> {{campaign.Campaign.datesent}}
+                                {{campaign.EmailTemplate.name}}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="field is-horizontal">
+                <div class="field-label is-normal">
+                    <label class="label"></label>
+                </div>
+                <div class="field-body">
+                    <button class="button is-block is-info">Compare</button>
+                </div>
+            </div>
+        </form>
+</div>
+
 {% endblock %}

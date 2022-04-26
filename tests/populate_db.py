@@ -12,6 +12,8 @@ from prphish import create_app
 from prphish.models import ResponseTypes, db, EmailTemplate, Campaign, EmailResponse, ResponseTypes
 import datetime
 import uuid
+import json
+import bcrypt
 
 
 app = create_app()
@@ -35,20 +37,33 @@ db.session.add(campaign)
 
 print(campaign.id)
 
+
+# create a matching email list
+prepdict = {}
+prepdict["email_hashedlist"] = {}
+
 # create 100 sent email
 responses = []
 for i in range(0, 100):
+    toaddr = 'foo{}@g.com'.format(i)
+    toaddrhash = bcrypt.hashpw(toaddr.encode(
+        'utf-8'), bcrypt.gensalt()).decode('utf-8')
+    prepdict["email_hashedlist"][toaddr] = toaddrhash
     response = EmailResponse(
-        emailId=str(uuid.uuid4()),
+        emailId=toaddrhash,
         campaignId=campaign.id,
         responseDate=datetime.datetime.utcnow(),
         response=int(ResponseTypes.SENT))
     db.session.add(response)
     responses.append(response)
 
+# save email list
+with open('email_list.txt', "w") as f:
+    json.dump(prepdict, f,  indent=4)
+
 for i in range(0, 30):
     response = EmailResponse(
-        id=responses[i].id,
+        emailId=responses[i].emailId,
         campaignId=campaign.id,
         responseDate=datetime.datetime.utcnow(),
         response=int(ResponseTypes.CLICK))

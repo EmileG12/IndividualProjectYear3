@@ -1,6 +1,9 @@
 {%extends "base.html"%}
-{% block content %}
 
+
+{% block content %}
+<!-- frappe -->
+<script src="https://cdn.jsdelivr.net/npm/frappe-charts@1.2.4/dist/frappe-charts.min.iife.js"></script>
 
 <h1 class="title"> Phishing Campaign Results</h1>
 <div class="box">
@@ -14,38 +17,144 @@
     {% endif %}
     {% endwith %}
 
+    <div class="columns">
 
-    <div class="box">
-        <h2 class="subtitle has-text-left"><span class="tag is-white">Template used</span> <span
-                class="has-text-weight-bold">{{ name }}
-            </span></h2>
-        <h2 class="has-text-left"><span class="tag is-white">Date sent</span> {{ datesent }}
-        </h2>
-        <br>
-        <table class="table is-bordered has-background-white">
-            <thead>
-                <tr>
-                    <td class="has-text-weight-bold">Response Type</td>
-                    <td class="has-text-weight-bold">Number of hits</td>
-                </tr>
-            </thead>
-            <tbody>
-                <!-- work around variable scope --->
-                {% for t in types -%}
-                {% if types[t] != 'SENT' %}
-                <tr>
-                    <td>{{types[t]}}</td>
-                    <td>{{sums[t]}}</td>
-                </tr>
+
+        <!--- SUMMARY TABLE-->
+        <div class="column">
+            <div class="box">
+                <h2 class="subtitle has-text-left"><span class="tag is-white">Template used</span> <span
+                        class="has-text-weight-bold">{{ name }}
+                    </span></h2>
+                <h2 class="has-text-left"><span class="tag is-white">Date sent</span> {{ datesent }}
+                </h2>
+                <br>
+                <table class="table is-bordered has-background-white">
+                    <thead>
+                        <tr>
+                            <td class="has-text-weight-bold">Response Type</td>
+                            <td class="has-text-weight-bold">Number of hits</td>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for t in types -%}
+                        {% if types[t] != 'SENT' and types[t] != 'CLICK' %}
+                        <tr>
+                            <td>{{types[t]}}</td>
+                            <td>{{sums[t]}}</td>
+                        </tr>
+                        {% endif %}
+                        {% endfor %}
+                        <tr>
+                            <td>CLICK</td>
+                            <td>{{click}}</td>
+                        </tr>
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            <td class="has-text-weight-bold">Total email sent</td>
+                            <td>{{total}}</td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+
+
+        <!---CLICK GRAPHS-->
+
+        <div class="column">
+            <div id="interactions"></div>
+            People who followed a link from the email
+            <script>
+
+                new frappe.Chart("#interactions", {
+                    // or DOM element
+                    data: {
+                        labels: [
+                            "no response",
+                            "click",
+                        ],
+                        datasets: [
+                            {
+                                values: [{{ total- click}}, {{ click }}]
+                            }
+                        ]
+                    },
+                    type: "pie"
+                });
+            </script>
+        </div>
+
+        <!---INTERACTION GRAPHS-->
+
+        <div class="column">
+            <div id="inpage"></div>
+            Type of interactions
+            <script>
+                interactions = { 
+                {% for t in types %}
+                {% if types[t] != 'SENT' and types[t] != 'CLICK' %}
+                "{{types[t]}}" : ({{ sums[t] }}),
                 {% endif %}
                 {% endfor %}
-            </tbody>
-            <tfoot>
-                <tr>
-                    <td class="has-text-weight-bold">Total email sent</td>
-                    <td>{{total}}</td>
-                </tr>
-            </tfoot>
-        </table>
+                }
+                var s = 0
+                var val = []
+                var lab = []
+                for (m in interactions) {
+                    s += interactions[m]
+                    lab.push(m)
+                    val.push(interactions[m])
+                }
+                lab.push('no interaction')
+                val.push({{ click }}-s)
+                new frappe.Chart("#inpage", {
+                    // or DOM element
+                    data: {
+                        labels: lab,
+                        datasets: [
+                            {
+                                values: val
+                            }
+                        ]
+                    },
+                    type: "pie"
+                });
+            </script>
+        </div>
     </div>
-    {% endblock %}
+</div>
+<!---PERSONAL RESULTS -->
+{% if responses%}
+<div class="box">
+    <h2 class="subtitle">Individual responses</h2>
+    <table class="table is-bordered has-background-white">
+        <thead>
+            <tr>
+                <td class="has-text-weight-bold">Name</td>
+                {% for t in types -%}
+                <td>{{types[t]}}</td>
+                {% endfor %}
+            </tr>
+        </thead>
+        <tbody>
+            {% for r in responses -%}
+
+            <tr>
+                <td>{{responses[r]['name']}}</td>
+                {% for t in types -%}
+                <td>{{responses[r][types[t]] | default(0) }}</td>
+                {% endfor %}
+
+            </tr>
+            {% endfor %}
+
+        </tbody>
+        <tfoot>
+
+        </tfoot>
+    </table>
+</div>
+{% endif %}
+{% endblock %}

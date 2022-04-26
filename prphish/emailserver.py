@@ -66,7 +66,8 @@ class EmailServer:
         msg = message.as_string()
         # add a record to keep track of the number of sent emails
         self.smtp.sendmail(self.serverUsername, toAddr, msg)
-        record_response(toAddrHash, campaignId,datetime.utcnow(), ResponseTypes.SENT)
+        record_response(toAddrHash, campaignId,
+                        datetime.utcnow(), ResponseTypes.SENT)
 
     def __del__(self):
         if self.smtp:
