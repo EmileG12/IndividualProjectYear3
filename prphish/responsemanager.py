@@ -26,7 +26,7 @@ def previewphish():
     return material_render(responsepagetemplatename)
 
 
-@ responsemanager.route('/previewmaterial')
+@responsemanager.route('/previewmaterial')
 def previewmaterial():
     templateId = request.args.get('id')
     materialtemplatename = EmailTemplate.query.filter_by(
