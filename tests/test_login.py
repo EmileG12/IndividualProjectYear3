@@ -15,7 +15,6 @@ def test_protected_page(client, auth, page, expected):
     assert "/login" in response.headers.get('Location')
     auth.login()
     response = client.get(page)
-    # We are in the Add user page
     assert expected in response.data
 
 
@@ -32,7 +31,6 @@ def test_protected_post(client, auth, page, expected):
     assert "/login" in response.headers.get('Location')
     auth.login()
     response = client.post(page, follow_redirects=True)
-    # We are in the Add user page
     assert expected in response.data
 
 
