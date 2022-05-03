@@ -1,7 +1,9 @@
+from cProfile import run
 import json
 
 import jinja2
 from flask import Blueprint, render_template, redirect, url_for, request, flash, send_file, current_app
+from flask_login import login_required, current_user
 from .models import db, EmailResponse, EmailTemplate, Campaign, ResponseTypes
 from sqlalchemy import func
 
@@ -10,12 +12,25 @@ datamanager = Blueprint('datamanager', __name__)
 
 
 @datamanager.route("/getresponses")
+@login_required
 def selectcampaign():
     prepTable = db.session.query(Campaign, EmailTemplate).join(EmailTemplate)
     return render_template("datamanager.html", campaigns=prepTable)
 
 
+class CampaignResult:
+    types = ResponseTypes.getDict()
+
+    def __init__(self, name, datesent):
+        self.name = name
+        self.datesent = datesent
+        self.sums = {}
+        self.total = 0
+        self.click = 0
+
+
 @datamanager.route("/responses", methods=['POST'])
+@login_required
 def selectcampaign_post():
     if request.files.get('emailhashfile'):
         return emailmatching()
@@ -23,42 +38,73 @@ def selectcampaign_post():
         return simpleReport()
 
 
-def simpleReport():
+@datamanager.route("/responsesIndividual", methods=['POST'])
+@login_required
+def selectcampaigncompare_post():
     campaignId = request.form.get("campaignid")
+    if not campaignId:
+        flash('unknown campaign')
+        return redirect(url_for('datamanager.selectcampaign'))
     responses = db.session.query(
         Campaign,
         EmailTemplate,
         EmailResponse.response.label('code'),
         func.count(EmailResponse.response).label('sum')
     ).filter_by(id=campaignId).join(EmailTemplate).join(EmailResponse).group_by(EmailResponse.response)
-    types = ResponseTypes.getDict()
-    sums = {}
-    total = 0
-    click = 0
-    for row in responses:
-        # SENT is a special case, we went to show it at the bottom of the table
-        if types[row.code] == 'SENT':
-            total = row.sum
-        elif types[row.code] == 'CLICK':
-            click = row.sum
-        else:
-            sums[row.code] = row.sum
-    # Show 0 if there are no responses of a certain type
-    for t in types:
-        if not t in sums:
-            sums[t] = 0
-    print("Campaign ID : " + campaignId)
+    result = campaignResult(responses)
+
+    previouscampaignId = request.form.get("previouscampaignid")
+    previousresponses = db.session.query(
+        Campaign,
+        EmailTemplate,
+        EmailResponse.response.label('code'),
+        func.count(EmailResponse.response).label('sum')
+    ).filter_by(id=previouscampaignId).join(EmailTemplate).join(EmailResponse).group_by(EmailResponse.response)
+    previousresult = campaignResult(previousresponses)
     return render_template("dataresponse.html",
-                           name=responses.first().EmailTemplate.name,
-                           datesent=responses.first().Campaign.datesent,
-                           types=types,
-                           click=click,
-                           sums=sums,
-                           total=total)
+                           result=result, previousresult=previousresult)
+
+
+def campaignResult(responses):
+    result = CampaignResult(
+        responses.first().EmailTemplate.name, responses.first().Campaign.datesent)
+
+    for row in responses:
+        # SENT is a special case, we want to show it at the bottom of the table
+        if result.types[row.code] == 'SENT':
+            result.total = row.sum
+        elif result.types[row.code] == 'CLICK':
+            result.click = row.sum
+        else:
+            result.sums[row.code] = row.sum
+    # Show 0 if there are no responses of a certain type
+    for t in result.types:
+        if not t in result.sums:
+            result.sums[t] = 0
+    return result
+
+
+def simpleReport():
+    campaignId = request.form.get("campaignid")
+    if not campaignId:
+        flash('unknown campaign')
+        return redirect(url_for('datamanager.selectcampaign'))
+    responses = db.session.query(
+        Campaign,
+        EmailTemplate,
+        EmailResponse.response.label('code'),
+        func.count(EmailResponse.response).label('sum')
+    ).filter_by(id=campaignId).join(EmailTemplate).join(EmailResponse).group_by(EmailResponse.response)
+    result = campaignResult(responses)
+    return render_template("dataresponse.html",
+                           result=result)
 
 
 def emailmatching():
     campaignId = request.form.get("campaignid")
+    if not campaignId:
+        flash('unknown campaign')
+        return redirect(url_for('datamanager.selectcampaign'))
     rows = db.session.query(
         Campaign,
         EmailTemplate,
@@ -77,16 +123,14 @@ def emailmatching():
         flash("Invalid email file")
         return redirect(url_for('datamanager.selectcampaign'))
 
-    types = ResponseTypes.getDict()
     # check if the email list is relevant
     matchcount = 0
 
-    # total sent
-    total = 0
-    click = 0
-    sums = {}
-    for t in types:
-        sums[t] = 0
+    result = CampaignResult(
+        rows.first().EmailTemplate.name, rows.first().Campaign.datesent)
+
+    for t in result.types:
+        result.sums[t] = 0
 
     # individual responses
     responses = {}
@@ -98,24 +142,24 @@ def emailmatching():
             matchcount = matchcount + 1
         if ResponseTypes(row.EmailResponse.response) != ResponseTypes.SENT:
             if ResponseTypes(row.EmailResponse.response) == ResponseTypes.CLICK:
-                click += 1
+                result.click += 1
             else:
-                sums[row.EmailResponse.response] += 1
+                result.sums[row.EmailResponse.response] += 1
             if not id in responses:
                 responses[id] = {
                     'name': name,
                 }
-            type = types[row.EmailResponse.response]
+            type = result.types[row.EmailResponse.response]
             if not type in responses[id]:
                 responses[id][type] = 1
             else:
                 responses[id][type] += 1
         else:
-            total += 1
+            result.total += 1
 
-    for t in types:
-        if not t in sums:
-            sums[t] = 0
+    for t in result.types:
+        if not t in result.sums:
+            result.sums[t] = 0
 
     if matchcount == 0:
         print('not match')
@@ -125,10 +169,5 @@ def emailmatching():
     if matchcount < (len(hashpairlist) / 4):
         flash("Less than 25% of addresses matched, data or file may be outdated")
     return render_template("dataresponse.html",
-                           name=rows.first().EmailTemplate.name,
-                           datesent=rows.first().Campaign.datesent,
-                           types=types,
-                           click=click,
-                           sums=sums,
-                           total=total,
+                           result=result,
                            responses=responses)

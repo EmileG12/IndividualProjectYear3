@@ -6,3 +6,4 @@ phishMarket.py
 templates/blank.html
 db.sqlite-journal
 venv
+email_list.txt

@@ -3,8 +3,11 @@ from flask import Flask
 from flask_login import LoginManager
 
 
-def create_app():
-    app = Flask(__name__)
+def create_app(instance_path=None):
+    if instance_path:
+        app = Flask(__name__, instance_path=instance_path)
+    else:
+        app = Flask(__name__)
 
     app.config['SECRET_KEY'] = 'secret-key-goes-here'
     if not os.path.isdir(os.path.join(app.instance_path, "Templates")):
@@ -50,4 +53,5 @@ def create_app():
     from .datamanager import datamanager as datamanager_blueprint
     app.register_blueprint(datamanager_blueprint)
 
+    app.add_template_filter(os.path.basename, 'basename')
     return app

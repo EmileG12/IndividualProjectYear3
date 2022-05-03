@@ -6,27 +6,120 @@
 <script src="https://cdn.jsdelivr.net/npm/frappe-charts@1.2.4/dist/frappe-charts.min.iife.js"></script>
 
 <h1 class="title"> Phishing Campaign Results</h1>
-<div class="box">
-    {% with messages = get_flashed_messages() %}
-    {% if messages %}
-    <div class="box">
-        <div class="notification is-danger">
-            {{ messages[0] }}
-        </div>
-    </div>
-    {% endif %}
-    {% endwith %}
 
+{% with messages = get_flashed_messages() %}
+{% if messages %}
+<div class="box">
+    <div class="notification is-danger">
+        {{ messages[0] }}
+    </div>
+</div>
+{% endif %}
+{% endwith %}
+
+
+{% if previousresult %}
+<div class="box">
+    <h2 class="subtitle"> Campaign evolution </h2>
     <div class="columns">
 
 
         <!--- SUMMARY TABLE-->
         <div class="column">
+            <table class="table is-bordered has-background-white">
+                <thead>
+                    <tr>
+                        <td class="has-text-weight-bold">Response Type</td>
+                        <td class="has-text-weight-bold">{{ previousresult.datesent.strftime('%Y-%m-%d') }}</td>
+                        <td class="has-text-weight-bold">{{ result.datesent.strftime('%Y-%m-%d') }}</td>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for t in result.types -%}
+                    {% if result.types[t] != 'SENT' and result.types[t] != 'CLICK' %}
+                    <tr>
+                        <td>{{ result.types[t] }} </td>
+                        <td>{{ '%.2f' % (previousresult.sums[t]*100/ previousresult.total) }} %</td>
+                        <td>{{ '%.2f' % (result.sums[t]*100/ result.total) }} %</td>
+                    </tr>
+                    {% endif %}
+                    {% endfor %}
+                    <tr>
+                        <td>CLICK</td>
+                        <td>{{ '%.2f' % (previousresult.click*100/ previousresult.total) }} %</td>
+                        <td>{{ '%.2f' % (result.click*100/ result.total) }} %</td>
+                    </tr>
+                </tbody>
+                </tfoot>
+            </table>
+        </div>
+
+        <div class="column">
+
+            <div id="evolution"></div>
+            <script>
+                labels = [
+                    {% for t in result.types %}
+                {% if result.types[t] != 'SENT' %}
+                "{{result.types[t]}}",
+                    {% endif %}
+                {% endfor %}
+            ]
+
+                set1 = []
+                {% for t in result.types %}
+                {% if result.types[t] != 'SENT' and result.types[t] != 'CLICK' %}
+                set1.push({{ previousresult.sums[t] * 100 / previousresult.total }})
+                {% endif %}
+                {% endfor %}
+                set1.push({{ previousresult.click * 100 / previousresult.total }})
+
+                set2 = []
+                {% for t in result.types %}
+                {% if result.types[t] != 'SENT'and result.types[t] != 'CLICK' %}
+                set2.push({{ result.sums[t] * 100 / result.total }})
+                {% endif %}
+                {% endfor %}
+                set2.push({{ result.click * 100 / result.total }})
+
+                new frappe.Chart("#evolution", {
+                    // or DOM element\
+                    data: {
+                        labels: labels,
+                        datasets: [
+                            {
+                                name: "{{ previousresult.datesent.strftime('%Y-%m-%d') }}",
+                                values: set1
+                            },
+
+                            {
+                                name: "{{ result.datesent.strftime('%Y-%m-%d') }}",
+                                values: set2
+                            },
+                        ]
+                    },
+                    type: 'bar'
+                });
+            </script>
+        </div>
+
+    </div>
+</div>
+{% endif %}
+
+{% set reportnum = 0 %}
+
+{% macro simplereport(result, reportnum) %}
+<div class="box">
+
+    <div class="columns">
+        <!--- SUMMARY TABLE-->
+        <div class="column">
             <div class="box">
                 <h2 class="subtitle has-text-left"><span class="tag is-white">Template used</span> <span
-                        class="has-text-weight-bold">{{ name }}
+                        class="has-text-weight-bold">{{ result.name }}
                     </span></h2>
-                <h2 class="has-text-left"><span class="tag is-white">Date sent</span> {{ datesent }}
+                <h2 class="has-text-left"><span class="tag is-white">Date sent</span> {{ result.datesent }}
                 </h2>
                 <br>
                 <table class="table is-bordered has-background-white">
@@ -37,23 +130,23 @@
                         </tr>
                     </thead>
                     <tbody>
-                        {% for t in types -%}
-                        {% if types[t] != 'SENT' and types[t] != 'CLICK' %}
+                        {% for t in result.types -%}
+                        {% if result.types[t] != 'SENT' and result.types[t] != 'CLICK' %}
                         <tr>
-                            <td>{{types[t]}}</td>
-                            <td>{{sums[t]}}</td>
+                            <td>{{result.types[t]}}</td>
+                            <td>{{result.sums[t]}}</td>
                         </tr>
                         {% endif %}
                         {% endfor %}
                         <tr>
                             <td>CLICK</td>
-                            <td>{{click}}</td>
+                            <td>{{result.click}}</td>
                         </tr>
                     </tbody>
                     <tfoot>
                         <tr>
                             <td class="has-text-weight-bold">Total email sent</td>
-                            <td>{{total}}</td>
+                            <td>{{result.total}}</td>
                         </tr>
                     </tfoot>
                 </table>
@@ -63,12 +156,13 @@
 
         <!---CLICK GRAPHS-->
 
+
         <div class="column">
-            <div id="interactions"></div>
+            <div id="interactions{{reportnum}}"></div>
             People who followed a link from the email
             <script>
 
-                new frappe.Chart("#interactions", {
+                new frappe.Chart("#interactions{{reportnum}}", {
                     // or DOM element
                     data: {
                         labels: [
@@ -77,10 +171,10 @@
                         ],
                         datasets: [
                             {
-                                values: [{{ total- click}}, {{ click }}]
-                            }
+                                values: [{{ result.total - result.click }}, {{ result.click }}]
+                }
                         ]
-                    },
+                },
                     type: "pie"
                 });
             </script>
@@ -89,13 +183,13 @@
         <!---INTERACTION GRAPHS-->
 
         <div class="column">
-            <div id="inpage"></div>
+            <div id="inpage{{reportnum}}"></div>
             Type of interactions
             <script>
                 interactions = { 
-                {% for t in types %}
-                {% if types[t] != 'SENT' and types[t] != 'CLICK' %}
-                "{{types[t]}}" : ({{ sums[t] }}),
+                {% for t in result.types %}
+                {% if result.types[t] != 'SENT' and result.types[t] != 'CLICK' %}
+                "{{result.types[t]}}" : ({{ result.sums[t] }}),
                 {% endif %}
                 {% endfor %}
                 }
@@ -108,8 +202,8 @@
                     val.push(interactions[m])
                 }
                 lab.push('no interaction')
-                val.push({{ click }}-s)
-                new frappe.Chart("#inpage", {
+                val.push({{ result.click }}-s)
+                new frappe.Chart("#inpage{{reportnum}}", {
                     // or DOM element
                     data: {
                         labels: lab,
@@ -125,6 +219,17 @@
         </div>
     </div>
 </div>
+{% endmacro %}
+
+{{ simplereport(result, reportnum) }}
+
+{% if previousresult %}
+
+{% set reportnum = reportnum + 1 %}
+{{ simplereport(previousresult,reportnum) }}
+
+{% endif %}
+
 <!---PERSONAL RESULTS -->
 {% if responses%}
 <div class="box">
@@ -133,8 +238,10 @@
         <thead>
             <tr>
                 <td class="has-text-weight-bold">Name</td>
-                {% for t in types -%}
-                <td>{{types[t]}}</td>
+                {% for t in result.types -%}
+                {% if result.types[t] != 'SENT' %}
+                <td>{{result.types[t]}}</td>
+                {% endif %}
                 {% endfor %}
             </tr>
         </thead>
@@ -143,8 +250,10 @@
 
             <tr>
                 <td>{{responses[r]['name']}}</td>
-                {% for t in types -%}
-                <td>{{responses[r][types[t]] | default(0) }}</td>
+                {% for t in result.types -%}
+                {% if result.types[t] != 'SENT' %}
+                <td>{{responses[r][result.types[t]] | default(0) }}</td>
+                {% endif %}
                 {% endfor %}
 
             </tr>

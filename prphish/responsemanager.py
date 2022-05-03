@@ -5,11 +5,36 @@ import flask_sqlalchemy
 from datetime import datetime
 import jinja2
 from .models import db, EmailResponse, EmailTemplate, Campaign, ResponseTypes, record_response
+from jinja2 import Template
 
 responsemanager = Blueprint('responsemanager', __name__)
 
 
-@responsemanager.route('/gotphish')
+@responsemanager.route('/previewmail')
+def previewmail():
+    templateId = request.args.get('id')
+    templatefile = open(EmailTemplate.query.filter_by(
+        id=templateId).first().path, "r")
+    return Template(templatefile.read()).render()
+
+
+@responsemanager.route('/previewphish')
+def previewphish():
+    templateId = request.args.get('id')
+    responsepagetemplatename = EmailTemplate.query.filter_by(
+        id=templateId).first().responsepagetemplatename
+    return material_render(responsepagetemplatename)
+
+
+@ responsemanager.route('/previewmaterial')
+def previewmaterial():
+    templateId = request.args.get('id')
+    materialtemplatename = EmailTemplate.query.filter_by(
+        id=templateId).first().materialtemplatename
+    return material_render(materialtemplatename)
+
+
+@ responsemanager.route('/gotphish')
 def gotphish():
     emailId = request.args.get('s')
     campaignId = request.args.get('x')
@@ -33,7 +58,7 @@ def gotphish():
     return material_render(materialtemplatename)
 
 
-@responsemanager.route("/gotdownload")
+@ responsemanager.route("/gotdownload")
 def gotdownload():
     emailId = request.args.get('s')
     campaignId = request.args.get('x')
@@ -56,7 +81,7 @@ def material_render(materialtemplatename):
         render_template("sendemail.html")
 
 
-@responsemanager.route('/gotphish', methods=['POST'])
+@ responsemanager.route('/gotphish', methods=['POST'])
 def gotphish_post():
     emailId = request.form.get("emailId")
     campaignId = request.form.get("campaignId")
@@ -69,7 +94,7 @@ def gotphish_post():
     return material_render(materialtemplatename)
 
 
-@responsemanager.route('/gotdownload', methods=['GET'])
+@ responsemanager.route('/gotdownload', methods=['GET'])
 def download_phish_get():
     emailId = request.args.get('s')
     campaignId = request.args.get('x')

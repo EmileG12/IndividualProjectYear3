@@ -1,0 +1,13 @@
+IndividualProjectYear3
+[Unit]
+Description=uWSGI instance to serve prphish
+After=network.target
+
+[Service]
+User=emile
+Group=www-data
+WorkingDirectory=/home/emile/IndividualProjectYear3
+ExecStart=/home/emile/IndividualProjectYear3/runwsgi.sh
+
+[Install]
+WantedBy=multi-user.target

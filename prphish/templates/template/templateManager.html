@@ -7,7 +7,7 @@
     <a class="button is-block is-info is-large is-fullwidth" href="{{url_for('templatemanager.addtemplate')}}">Add
         Template</a>
     <hr>
-    <form method="GET" action="/templatget">
+    <form method="GET" action="/template">
         <div class="select  is-fullwidth  is-block  is-large">
             <select name="id">
                 {% for template in templates -%}

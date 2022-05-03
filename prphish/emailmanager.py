@@ -81,16 +81,6 @@ def sendmassmail(sender, subject, recipients, templateHash, msg, server):
     campaignId = str(uuid.uuid4())
     campaignDatetime = datetime.datetime.utcnow()
 
-    #  List of email addresses to send to is hashed without a salt
-    #  So that we may recover the responses based on  a specific list of emails later
-    hasher = hashlib.sha256()
-    hasher.update(recipients)
-    campaignlisthash = hasher.hexdigest()
-    campaign = Campaign(id=campaignId, datesent=campaignDatetime,
-                        templatehash=templateHash, emailhashlist=campaignlisthash)
-    db.session.add(campaign)
-    db.session.commit()
-
     # Read file containing addresses to send to as a list
     toaddrstring = recipients.decode("utf-8")
     print(toaddrstring)
@@ -102,6 +92,16 @@ def sendmassmail(sender, subject, recipients, templateHash, msg, server):
 
     if not "email_hashedlist" in prepdict:
         prepdict["email_hashedlist"] = {}
+
+    #  File of email addresses to send to is hashed without a salt
+    #  So that we may recover the responses based on  a specific list of emails later
+    hasher = hashlib.sha256()
+    hasher.update(recipients)
+    campaignlisthash = hasher.hexdigest()
+    campaign = Campaign(id=campaignId, datesent=campaignDatetime,
+                        templatehash=templateHash, emailhashlist=campaignlisthash)
+    db.session.add(campaign)
+    db.session.commit()
 
     listchecks = [False, False]
     # calculate hash for new emails and add them to the previous ones
@@ -140,17 +140,7 @@ def sendmassmail(sender, subject, recipients, templateHash, msg, server):
             print("System was not able to send to these addresses: " +
                   refusedAddresses + "\n Emails were sent to the rest, please try again")
 
-        hasher = hashlib.sha256()
-        hasher.update(recipients)
-        campaignlisthash = hasher.hexdigest()
-        campaign = Campaign(id=campaignId, datesent=campaignDatetime,
-                            templatehash=templateHash, emailhashlist=campaignlisthash)
-        db.session.add(campaign)
-        db.session.commit()
-        jsonstring = json.dumps(prepdict)
-        jsonbytes = io.BytesIO(bytes(jsonstring, "utf-8"))
-        return send_file(path_or_file=jsonbytes, mimetype="text/plain", as_attachment=True,
-                         attachment_filename="hashlistatt.txt")
+        return render_template('sendresult.html', hashlist=json.dumps(prepdict))
     if (not list[0]) and (not list[1]):
         flash(
             "new_emails or email_hashedlist not found, please edit email list and try again")

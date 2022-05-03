@@ -1,8 +1,9 @@
 {% extends "base.html" %}
 
 {% block content %}
-<h3 class="title">Template {{ template.name }}</h3>
-<div class="column is-4 is-offset-4">
+<h1 class="title">Template Preview</h1>
+<h2 class="subtitle">{{ template.name }}</h2>
+<div class="box">
     {% with messages = get_flashed_messages() %}
     {% if messages %}
     <div class="notification is-danger">
@@ -10,5 +11,59 @@
     </div>
     {% endif %}
     {% endwith %}
+
+    <table class="table is-bordered has-background-white">
+        <thead>
+            <tr>
+                <td class="has-text-weight-bold">Type</td>
+
+                <td class="has-text-weight-bold"> Filename </td>
+
+
+                <td class="has-text-weight-bold">preview</td>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Email </td>
+                <td> {{template.path | basename}} </td>
+                <td><a class="button" href="{{ url_for('responsemanager.previewmail', id=template.id ) }} ">preview</a>
+                </td>
+            </tr>
+            <tr>
+                <td> Page </td>
+                <td>
+                    {% if template.responsepagetemplatename %}
+                    {{template.responsepagetemplatename | basename}}
+                    {% else %}
+                    N/A
+                    {% endif %} </td>
+                <td>
+                    {% if template.responsepagetemplatename %}
+                    <a class="button" href="{{ url_for('responsemanager.previewphish',id=template.id) }} ">preview</a>
+                    {% endif %}
+                </td>
+            </tr>
+            <tr>
+                <td> Material </td>
+                <td>
+                    {% if template.materialtemplatename %}
+                    {{template.materialtemplatename | basename}}
+                    {% else %}
+                    N/A
+                    {% endif %} </td>
+                </td>
+                <td>
+                    {% if template.materialtemplatename %}
+                    <a class="button"
+                        href="{{ url_for('responsemanager.previewmaterial', id=template.id ) }} ">preview</a>
+                    {% endif %}
+                </td>
+            </tr>
+        </tbody>
+        </tfoot>
+    </table>
+
+
 </div>
 {% endblock %}

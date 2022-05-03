@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+
+
+<h1 class="title">
+    The Phising Campaign has been launched!
+</h1>
+<div class="box">
+    {% with messages = get_flashed_messages() %}
+    {% if messages %}
+    <div class="box">
+        <div class="notification is-danger">
+            {{ messages[0] }}
+        </div>
+    </div>
+    {% endif %}
+    {% endwith %}
+    <p>Your email list download should start shortly if not
+    </p>
+    </br>
+    <a id="download" class="button">Download Manually</a>
+
+    <script>
+        let textBlob = new Blob(['{{ hashlist | safe}}'], { type: 'text/plain' });
+        let objectUrl = URL.createObjectURL(textBlob);
+        let a = document.getElementById("download");
+        a.href = objectUrl;
+        let fileName = "email_list.txt";
+        a.setAttribute("download", fileName);
+
+        a.addEventListener('click', (e) => {
+            setTimeout(() => URL.revokeObjectURL(e.target.href), 30 * 1000);
+        });
+        a.click()
+    </script>
+</div>
+{% endblock %}

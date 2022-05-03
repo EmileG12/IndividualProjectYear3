@@ -53,8 +53,24 @@
         </form>
 </div>
 <div class="box">
-    <h4 class="subtitle">Previous Campaign </h3>
+    <h4 class="subtitle">Compare Campaigns </h3>
         <form method="POST" action="/responsesIndividual" enctype="multipart/form-data">
+            <div class="field is-horizontal">
+                <div class="field-label is-normal">
+                    <label class="label">Previous Campaign:</label>
+                </div>
+                <div class="field-body">
+                    <div class="select  is-fullwidth  is-block  is-large">
+                        <select name="previouscampaignid">
+                            {% for campaign in campaigns -%}
+                            <option value="{{campaign.Campaign.id}}"> {{campaign.Campaign.datesent}}
+                                {{campaign.EmailTemplate.name}}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+            </div>
             <div class="field is-horizontal">
                 <div class="field-label is-normal">
                     <label class="label">Campaign:</label>
